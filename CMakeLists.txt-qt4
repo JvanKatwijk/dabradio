@@ -125,7 +125,7 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
 	           .
 	           ./
 	           ./includes	
-	           ./dab-scopes
+	           ./dab-scope
 	           ./includes/ofdm
 	           ./includes/backend
 	           ./includes/backend/viterbi_768
