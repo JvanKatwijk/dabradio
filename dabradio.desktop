@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=dabradio
+Exec=dabradio
+Icon=dabradio
+Type=Application
+Categories=AudioVideo;
+Comment=A DAB/DAB+ decoder using Qt and C++
