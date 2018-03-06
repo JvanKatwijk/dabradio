@@ -217,7 +217,6 @@ CONFIG	+= SSE
 #
 # an attempt to have it run under W32 through cross compilation
 win32 {
-#DESTDIR	= ../../../dab-win
 DESTDIR		= ../../windows-bin
 # includes in mingw differ from the includes in fedora linux
 
@@ -251,9 +250,7 @@ LIBS		+= -lz
 FORMS 		+= ./forms/dabradio.ui 
 FORMS		+= ./forms/technical_data.ui
 
-CONFIG		+= extio
 CONFIG		+= airspy
-CONFIG		+= rtl_tcp
 CONFIG		+= dabstick
 CONFIG		+= sdrplay
 
