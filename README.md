@@ -39,17 +39,9 @@ all services)
    	- SDR DAB sticks (RTL2838U or similar), and
    	- prerecorded dump (*.sdr, and *.iq) 
  
-Not  implemented:
+Data services are not  implemented, although data as subservice are - limited - implemented.
 
-  * DMB (Audio and Video)
-  * TPEG;
-  * EPG;
-  * Journaline;
-  * Other bands than used for terrestrial broadcasting in Europe (like DAB over cable)
-  * HackRF
-
-
-------------------------------------------------------------------
+ ------------------------------------------------------------------
 Introduction
 ------------------------------------------------------------------
 
@@ -58,7 +50,7 @@ Introduction
 **dabradio** is the little brother of Qt-DAB. The latter is kind of a research vehicle, with lost of options, used by only a few. The need arose to have
 a smaller brother, just for listening to DAB services.
 
-dabradio and Qt-DAB share a lot of functionality, obviously, nevertheless
+**dabradio** and Qt-DAB share a lot of functionality, obviously, nevertheless
 to avoid even more "ifdef"s in the code, it was decided to
 maintain a GitHub repository for both of them.
 
@@ -66,11 +58,10 @@ The Qt-free version, the "command line only" version, is named dab-cmdline, and 
 
 Next to these C++ based versions, a version in Java is being developed, it has its own repository on Github.
 
-dabradio dynamically selects the input device. If an input device (one of 
-SDRplay, AIRspy or RTLSDR stick) is attached, the software will find and
-use that device (if more than one device is connected, the software
-will select one of them). If no external device is selected, the software
-will present a menu to select a file for file input.
+**dabradio** dynamically selects the input device, there is no input device selector on the GUI.
+If an input device (one of SDRplay, AIRspy or RTLSDR stick) is attached, the software will detect and
+use that device (if more than one device is connected, the software will select one of them).
+If no external device is detected, the software will present a menu to select a file for file input.
 
 For further information please visit http://www.sdr-j.tk
 
@@ -169,25 +160,18 @@ For generating an executable under Ubuntu (16.04 or newer), you can put the foll
 Configuring using the dabradio.pro file
 ------------------------------------------------------------------
 
-Options in the configuration are:
-
-  a) select or unselect devices
-
-Adding or removing from the configuration is in all cases by commenting or uncommenting a line in the configuration file.
+Options in the configuration is to select or unselect devices.
 
 Comment the lines out by prefixing the line with a `#` in the `qt-dab.pro` file (section "unix") for the device(s) you want to exclude in the configuration. In the example below, rtl_tcp (i.e. the connection to the rtlsdr server) won't be used.
 ```
 CONFIG          += dabstick
 CONFIG          += sdrplay
-#CONFIG          += rtl_tcp
 CONFIG          += airspy
 ```
 
 Remark: Input from pre-recorded files (8 bit unsigned `*.raw` and `*.iq' as well as 16-bit "wav" `*.sdr` files) is configured by default.
 
-Audio samples are - by default - sent to an audio device using the portaudio
-library.
-
+Audio samples are - by default - sent to an audio device using the portaudio library.
 
 ------------------------------------------------------------------
 Configuring using CMake
@@ -197,12 +181,10 @@ The `CMakeLists.txt` file has all devices and the spectrum switched off as defau
 
 An example:
 ```
-cmake .. -DSDRPLAY=ON -DRTLTCP=ON -DSPECTRUM=ON
+cmake .. -DSDRPLAY=ON -DRTLSDR=ON -DAIRSPY=ON
 ```
 	
-will generate a makefile with support for a) the SDRplay device, b) for the remote dabstick (using the rtl_tcp connection) and c) for the spectrum in the configuration.
-
-Other devices that can be selected (beside dabstick and rtl_tcp) are sdrplay and airspy. Use `-DRTLSDR=ON`, or `-DAIRSPY=ON` after the `cmake` command if you want to configure them.
+will generate a makefile with support for three supported devices,  the SDRplay device the AIRSPY device and the RTLSDR based dabsticks.
 
 The default location for installation depends on your system, mostly `/usr/local/bin` or something like that. Set your own location by adding
 ```
@@ -283,25 +265,6 @@ defines the directory where the slides (MOT slideshow) should be stored. Default
 
 `showSlides=1` 
 when set to 0 the slides will not be shown.
-
-`has-presetName=1` 
-when set the name of the selected service - that is selected when closing down the program - is kept and at the next invocation of the program, an attempt is made to start that particular service. The name of the service is kept as `presetname=xxxx`
-
-The background colors of the spectrum can be changed by setting 
-```
-displaycolor=blue
-gridcolor=red
-```
-
-The Qt-DAB program now searches - if available - for TII (transmitter identification information) data in the FIC. If TII data is available, the small label at the bottom of the Technical Details widget will color green, and the main ID if the transmitters is shown. Also the list of geographical positions of the transmitters of the FSN is printed on the terminal. If the identification of the transmitter received can be decoded, it will be shown at the bottom line of the Technical Data Widget.
-
-The periodicity of the search for the data defining the position of the transmitter received can be set by adding a line to the `.qt-dab.ini` file
-
-```
-tii_delay=xxx
-```
-
-where xxx is the number of seconds. Default of the delay is 20 seconds.
 
 --------------------------------------------------------------------------------
 A note on intermittent sound 
