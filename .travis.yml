@@ -39,7 +39,7 @@ script:
   - make install
   - cd ..
   - cd ..
-
+  - pwd
   - sudo apt-get install build-essential cmake libusb-1.0-0-dev pkg-config
   - wget https://github.com/airspy/host/archive/master.zip
   - unzip master.zip
@@ -52,6 +52,7 @@ script:
   - make install
   - cd ..
   - cd ..
+  - pwd
   - ls -l appdir/usr/lib
 after_success:
   - wget -c "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage" 
