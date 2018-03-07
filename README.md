@@ -39,7 +39,7 @@ all services)
    	- SDR DAB sticks (RTL2838U or similar), and
    	- prerecorded dump (*.sdr, and *.iq) 
  
-Data services are not  implemented, although data as subservice are - limited - implemented.
+Data services are not  implemented, although showing MOT data as subservice is implemented.
 
  ------------------------------------------------------------------
 Introduction
@@ -47,21 +47,30 @@ Introduction
 
 ![dabradio with input](/screenshot_dabradio.png?raw=true)
 
-**dabradio** is the little brother of Qt-DAB. The latter is kind of a research vehicle, with lost of options, used by only a few. The need arose to have
-a smaller brother, just for listening to DAB services.
+**dabradio** is the little brother of Qt-DAB. The latter is kind of a research vehicle, with lots of options, most of them used by only a few. The need arose to have a smaller brother, just for tuning to and listening to DAB services.
 
-**dabradio** and Qt-DAB share a lot of functionality, obviously, nevertheless
+**dabradio** and Qt-DAB share a lot of functionality, obviously. Nevertheless
 to avoid even more "ifdef"s in the code, it was decided to
 maintain a GitHub repository for both of them.
 
-The Qt-free version, the "command line only" version, is named dab-cmdline, and is built around a library that does the DAB decoding. It has its own repository on Github.
-
-Next to these C++ based versions, a version in Java is being developed, it has its own repository on Github.
+Next to the C++ based versions (dabradio, Qt-DAB and the dab-cmdline versions), a version in Java is being developed, it has its own repository on Github. Aim is to have dabradio and javaDab provide the same functionality.
 
 **dabradio** dynamically selects the input device, there is no input device selector on the GUI.
 If an input device (one of SDRplay, AIRspy or RTLSDR stick) is attached, the software will detect and
 use that device (if more than one device is connected, the software will select one of them).
-If no external device is detected, the software will present a menu to select a file for file input.
+If no external device is detected, the software will present a menu to select a file for file input (while default
+the selection is for ".sdr" files, a command line parameter can be set to switch the selection to ".iq" files).
+
+**dabradio** has as option to scan all channels in the selected band and allow selecting anyone of the services
+resulting from such a scan. Explicitly selecting a channel is - of course - also a possibility.
+
+The GUI does not provide buttons to select the Mode or the Band. Defaults are Mode 1 and the VHF Band III. In the ".ini" file
+(a file .dabradio.ini in the home directory of the user) the Mode can be set as well as the band.
+
+The GUI therefore only shows - next to the list of services - three selectors
+1. a selector for the channel on the soundcard (default set to "default");
+2. a selector for a channel in the selected band;
+3. a start button for scanning. Once touched, scanning will start over all channels in the band.
 
 For further information please visit http://www.sdr-j.tk
 
