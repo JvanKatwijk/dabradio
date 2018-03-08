@@ -231,13 +231,17 @@ In arch, it was essential to add the username to the group "audio".
 
 The most recent distribution of Raspbian Stretch (i.e. august 2017) supports both Qt5 and a qwt compiled against Qt5.
 
-IMPORTANT NOTE:
-Since I was studying the (potential) difference in behaviour between a version with and a version without concurrency in the front end, there is a setting in the ".pro" file for selecting this.
-Use for the dabradio the concurrency option.
+The releases section contains an AppImage developed under and for Raspbian Stretch on an RPI2. Note that libraries for
+the rtlsdr DABstick and/or the Airspy can be obtained from repositories for Raspbian Stretch. An API library for the SDRplay can be downloaded from  sdrplay.com
 
-For the ".pro" file uncomment 
+Use is simple, install the libraries as needed, download the AppImage file, chmod 777 dabradio-ARM.AppImage to set the
+exec bit and run the program. Running is possible therefore withour compiling anything.
+
+If you want to create your own executable, pls note that an optimal use of the 4 cores of the CPU can be makde
+by uncommenting (in the ".pro" file)
 
 	#DEFINES += __THREADED_DECODING.
+	#DEFINES += __THREADED_BACKEND
 
 For the CMakeLists.txt file, uncomment 
 
