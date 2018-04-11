@@ -4,43 +4,39 @@
  *    Jan van Katwijk (J.vanKatwijk@gmail.com)
  *    Lazy Chair Computing
  *
- *    This file is part of Qt-DAB
+ *    This file is part of dabradio
  *
- *    Qt-DAB is free software; you can redistribute it and/or modify
+ *    dabradio is free software; you can redistribute it and/or modify
  *    it under the terms of the GNU General Public License as published by
  *    the Free Software Foundation version 2 of the License.
  *
- *    Qt-DAB is distributed in the hope that it will be useful,
+ *    dabradio is distributed in the hope that it will be useful,
  *    but WITHOUT ANY WARRANTY; without even the implied warranty of
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *    GNU General Public License for more details.
  *
  *    You should have received a copy of the GNU General Public License
- *    along with Qt-DAB if not, write to the Free Software
+ *    along with dabradio if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include	<QThread>
 #include	<QSettings>
-#include	<QHBoxLayout>
-#include	<QLabel>
 #include	"sdrplay-handler.h"
 #include	"sdrplayselect.h"
 
 #define	DEFAULT_GRED	40
 
-	sdrplayHandler::sdrplayHandler  (QSettings *s) {
+	sdrplayHandler::sdrplayHandler  (QSettings *sdrplaySettings) {
 int	err;
 float	ver;
 mir_sdr_DeviceT devDesc [4];
 mir_sdr_GainValuesT gainDesc;
 sdrplaySelect	*sdrplaySelector;
 
-	sdrplaySettings			= s;
-	this	-> myFrame		= new QFrame (NULL);
-	setupUi (this -> myFrame);
-	this	-> myFrame	-> show ();
-	antennaSelector		-> hide ();
+        gainValue               =
+	                  sdrplaySettings -> value ("gain", 40). toInt ();
+        autogainValue           =
+	                  sdrplaySettings -> value ("autogain", 0). toInt ();
 	this	-> inputRate		= Khz (2048);
 	_I_Buffer			= NULL;
 	libraryLoaded			= false;
@@ -56,7 +52,6 @@ ULONG APIkeyValue_length = 255;
           fprintf (stderr,
 	           "failed to locate API registry entry, error = %d\n",
 	           (int)GetLastError());
-	   delete myFrame;
 	   throw (21);
 	}
 
@@ -76,7 +71,6 @@ ULONG APIkeyValue_length = 255;
 	Handle	= LoadLibrary (x);
 	if (Handle == NULL) {
 	  fprintf (stderr, "Failed to open mir_sdr_api.dll\n");
-	  delete myFrame;
 	  throw (22);
 	}
 #else
@@ -87,7 +81,6 @@ ULONG APIkeyValue_length = 255;
 
 	if (Handle == NULL) {
 	   fprintf (stderr, "error report %s\n", dlerror ());
-	   delete myFrame;
 	   throw (23);
 	}
 #endif
@@ -100,7 +93,6 @@ ULONG APIkeyValue_length = 255;
 #else
            dlclose (Handle);
 #endif
-	   delete myFrame;
 	   throw (23);
 	}
 
@@ -112,37 +104,12 @@ ULONG APIkeyValue_length = 255;
 #else
            dlclose (Handle);
 #endif
-	   delete myFrame;
 	   throw (24);
 	}
 
-	api_version	-> display (ver);
 	_I_Buffer	= new RingBuffer<std::complex<float>>(1024 * 1024);
 	vfoFrequency	= Khz (220000);
-	currentGred	= DEFAULT_GRED;
 //
-//	See if there are settings from previous incarnations
-	sdrplaySettings		-> beginGroup ("sdrplaySettings");
-	coarseOffset	=
-	           sdrplaySettings -> value ("sdrplayOffset", 0). toInt ();
-	gainSlider 		-> setValue (
-	            sdrplaySettings -> value ("sdrplayGain", 50). toInt ());
-
-	ppmControl		-> setValue (
-	            sdrplaySettings -> value ("sdrplay-ppm", 0). toInt ());
-	sdrplaySettings	-> endGroup ();
-
-	setExternalGain	(gainSlider	-> value ());
-	set_ppmControl  (ppmControl	-> value ());
-//
-//	and be prepared for future changes in the settings
-	connect (gainSlider, SIGNAL (valueChanged (int)),
-	         this, SLOT (setExternalGain (int)));
-	connect (agcControl, SIGNAL (stateChanged (int)),
-	         this, SLOT (agcControl_toggled (int)));
-	connect (ppmControl, SIGNAL (valueChanged (int)),
-	         this, SLOT (set_ppmControl (int)));
-
 	my_mir_sdr_GetDevices (devDesc, &numofDevs, uint32_t (4));
 	if (numofDevs == 0) {
 	   fprintf (stderr, "Sorry, no device found\n");
@@ -151,42 +118,20 @@ ULONG APIkeyValue_length = 255;
 #else
            dlclose (Handle);
 #endif
-	   delete myFrame;
 	   throw (25);
 	}
 
-	if (numofDevs > 1) {
-           sdrplaySelector       = new sdrplaySelect ();
-           for (deviceIndex = 0; deviceIndex < numofDevs; deviceIndex ++) {
-#ifndef	__MINGW32__
-              sdrplaySelector ->
-                   addtoList (devDesc [deviceIndex]. DevNm);
-#else
-              sdrplaySelector ->
-                   addtoList (devDesc [deviceIndex]. SerNo);
-#endif
-           }
-           deviceIndex = sdrplaySelector -> QDialog::exec ();
-           delete sdrplaySelector;
-        }
-	else
-	   deviceIndex = 0;
-
-	serialNumber -> setText (devDesc [deviceIndex]. SerNo);
+	deviceIndex = 0;
 	hwVersion = devDesc [deviceIndex]. hwVer;
         fprintf (stderr, "hwVer = %d\n", hwVersion);
-	my_mir_sdr_SetDeviceIdx (deviceIndex);
-
-	antennaSelector -> hide ();
-	if (hwVersion == 2) {
-	   antennaSelector -> show ();
-	   connect (antennaSelector, SIGNAL (activated (const QString &)),
-	            this, SLOT (set_antennaControl (const QString &)));
+	err = my_mir_sdr_SetDeviceIdx (deviceIndex);
+	if (err != mir_sdr_Success) {
+	   throw (33);
 	}
 
 	if (hwVersion == 255) {
 	   nrBits	= 14;
-	   denominator	= 16384;
+	   denominator	= 8192;
 	}
 	else {
 	   nrBits	= 12;
@@ -196,25 +141,13 @@ ULONG APIkeyValue_length = 255;
 	unsigned char text;
 	(void)my_mir_sdr_GetHwVersion (&text);
 	fprintf (stderr, "hwVersion = %o\n", hwVersion);
-//	my_mir_sdr_ResetUpdateFlags (1, 0, 0);
 	running. store (false);
-	agcMode		= false;
 }
 
 	sdrplayHandler::~sdrplayHandler	(void) {
-	stopReader ();
 	if (!libraryLoaded)
 	   return;
-	sdrplaySettings	-> beginGroup ("sdrplaySettings");
-	sdrplaySettings	-> setValue ("sdrplayOffset", coarseOffset);
-	sdrplaySettings	-> setValue ("sdrplayGain", gainSlider -> value ());
-	sdrplaySettings -> setValue ("sdrplay-ppm", ppmControl -> value ());
-	sdrplaySettings	-> endGroup ();
-	sdrplaySettings	-> sync ();
-	delete	myFrame;
-
-	if (numofDevs > 0)
-	   my_mir_sdr_ReleaseDeviceIdx (deviceIndex);
+	stopReader ();
 	if (_I_Buffer != NULL)
 	   delete _I_Buffer;
 #ifdef __MINGW32__
@@ -253,7 +186,7 @@ void	sdrplayHandler::setVFOFrequency		(int32_t newFrequency) {
 int	gRdBSystem;
 int	samplesPerPacket;
 mir_sdr_ErrT	err;
-int	localGred	= currentGred;
+int	localGred	= maxGain () - gainValue;;
 
 	if (bankFor_sdr (newFrequency) == -1)
 	   return;
@@ -276,7 +209,7 @@ int	localGred	= currentGred;
 	                             mir_sdr_LO_Undefined,	// LOMode
 	                             0,	// LNA enable
 	                             &gRdBSystem,
-	                             agcMode,	
+	                             autogainValue,	
 	                             &samplesPerPacket,
 	                             mir_sdr_CHANGE_RF_FREQ);
 	if (err != mir_sdr_Success) 
@@ -288,16 +221,12 @@ int32_t	sdrplayHandler::getVFOFrequency	(void) {
 	return vfoFrequency;
 }
 
-void	sdrplayHandler::setExternalGain	(int newGain) {
-//	fprintf (stderr, "newGain = %d, slidervalue = %d\n",
-//	                     newGain, 
-//                             gainSlider -> value ());
+void	sdrplayHandler::set_Gain	(int newGain) {
+
 	if (newGain < 0 || newGain >= 102)
 	   return;
-
-	currentGred = maxGain () - newGain;
-	(void) my_mir_sdr_SetGr (currentGred, 1, 0);
-	gainDisplay	-> display (newGain);
+	gainValue	= newGain;
+	(void) my_mir_sdr_SetGr (maxGain () - gainValue, 1, 0);
 }
 
 int16_t	sdrplayHandler::maxGain	(void) {
@@ -344,7 +273,7 @@ bool	sdrplayHandler::restartReader	(void) {
 int	gRdBSystem;
 int	samplesPerPacket;
 mir_sdr_ErrT	err;
-int	localGRed	= currentGred;
+int	localGRed	= maxGain () - gainValue;
 
 	if (running. load ())
 	   return true;
@@ -365,7 +294,6 @@ int	localGRed	= currentGred;
 	   fprintf (stderr, "error code = %d\n", err);
 	   return false;
 	}
-	my_mir_sdr_SetPpm (double (ppmControl -> value ()));
 	err		= my_mir_sdr_SetDcMode (4, 1);
 	err		= my_mir_sdr_SetDcTrackTime (63);
 	running. store (true);
@@ -568,30 +496,9 @@ bool	sdrplayHandler::loadFunctions	(void) {
 	return true;
 }
 
-void	sdrplayHandler::agcControl_toggled (int agcMode) {
-	this	-> agcMode	= agcControl -> isChecked ();
-	my_mir_sdr_AgcControl (this -> agcMode, -currentGred, 0, 0, 0, 0, 1);
-	if (agcMode == 0)
-	   setExternalGain (gainSlider -> value ());
+void	sdrplayHandler::set_autoGain (bool autogainValue) {
+	my_mir_sdr_AgcControl (autogainValue, -(maxGain () - gainValue), 0, 0, 0, 0, 1);
+	if (!autogainValue)
+	   set_Gain (gainValue);
 }
 
-void	sdrplayHandler::set_ppmControl (int ppm) {
-	if (running. load ()) {
-	   my_mir_sdr_SetPpm	((float)ppm);
-	   my_mir_sdr_SetRf	((float)vfoFrequency, 1, 0);
-	}
-}
-
-void	sdrplayHandler::set_antennaControl (const QString &s) {
-mir_sdr_ErrT err;
-
-	if (hwVersion < 2)	// should not happen
-	   return;
-
-	if (s == "Antenna A")
-	   err = my_mir_sdr_RSPII_AntennaControl (mir_sdr_RSPII_ANTENNA_A);
-	else
-	   err = my_mir_sdr_RSPII_AntennaControl (mir_sdr_RSPII_ANTENNA_B);
-}
-
-	  

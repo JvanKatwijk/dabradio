@@ -32,22 +32,13 @@ int16_t res     = 1;
 }
 
 	sampleReader::sampleReader (RadioInterface *mr,
-	                            virtualInput	*theRig
-	                            ,RingBuffer<std::complex<float>> *spectrumBuffer
-	                           ) {
+	                            virtualInput	*theRig) {
 int	i;
 	this	-> theRig	= theRig;
         bufferSize		= 32768;
-        this    -> spectrumBuffer       = spectrumBuffer;
-        connect (this, SIGNAL (show_Spectrum (int)),
-                 mr, SLOT (showSpectrum (int)));
-        localBuffer. resize (bufferSize);
         localCounter		= 0;
-	connect (this, SIGNAL (show_Corrector (int)),
-	         mr, SLOT (set_CorrectorDisplay (int)));
 	currentPhase	= 0;
 	sLevel		= 0;
-	spectrum	= true;
 	sampleCount	= 0;
 	oscillatorTable = new std::complex<float> [INPUT_RATE];
         for (i = 0; i < INPUT_RATE; i ++)
@@ -64,10 +55,6 @@ int	i;
 
 	sampleReader::~sampleReader (void) {
 	delete[] oscillatorTable;
-}
-
-void	sampleReader::setSpectrum (bool b) {
-	spectrum	= b;
 }
 
 void	sampleReader::setRunning (bool b) {
@@ -110,9 +97,6 @@ std::complex<float> temp;
 	   }
 	}
 
-	if (localCounter < bufferSize)
-	   localBuffer [localCounter ++]        = temp;
-//
 //	OK, we have a sample!!
 //	first: adjust frequency. We need Hz accuracy
 	currentPhase	-= phaseOffset;
@@ -125,12 +109,6 @@ std::complex<float> temp;
 	if (++ sampleCount > INPUT_RATE / N) {
 	   show_Corrector	(corrector);
 	   sampleCount = 0;
-	   if (spectrum) {
-              spectrumBuffer -> putDataIntoBuffer (localBuffer. data (),
-	                                                    localCounter);
-              emit show_Spectrum (bufferSize);
-	   }
-           localCounter = 0;
 	}
 	return temp;
 }
@@ -175,8 +153,6 @@ int32_t		i;
 //
 //	Note that "phase" itself might be negative
 	   currentPhase	= (currentPhase + INPUT_RATE) % INPUT_RATE;
-	   if (localCounter < bufferSize)
-	      localBuffer [localCounter ++]     = v [i];
 	   v [i]	*= oscillatorTable [currentPhase];
 	   sLevel	= 0.00001 * jan_abs (v [i]) + (1 - 0.00001) * sLevel;
 	}
@@ -184,11 +160,6 @@ int32_t		i;
 	sampleCount	+= n;
 	if (sampleCount > INPUT_RATE / N) {
 	   show_Corrector	(corrector);
-	   if (spectrum) {
-	      spectrumBuffer -> putDataIntoBuffer (localBuffer. data (),
-	                                               bufferSize);
-	      emit show_Spectrum (bufferSize);
-	   }
 	   localCounter = 0;
 	   sampleCount = 0;
 	}

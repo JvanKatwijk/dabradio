@@ -92,30 +92,17 @@ struct dabFrequencies Lband_frequencies [] = {
 {NULL, 0}
 };
 
-	bandHandler::bandHandler (void) {}
+	bandHandler::bandHandler (const QString &band) {
+	   if (band == "Band III")
+	      dabBand = BAND_III;
+	   else
+	      dabBand = L_BAND;
+	}
+
 	bandHandler::~bandHandler (void) {}
 
-void	bandHandler::setupChannels (QComboBox *s, uint8_t band) {
-struct dabFrequencies *t;
-int16_t	i;
-int16_t	c	= s -> count ();
-
-//	clear the fields in the comboBox
-	for (i = 0; i < c; i ++) 
-	   s	-> removeItem (c - (i + 1));
-
-	if (band == BAND_III)
-	   t = bandIII_frequencies;
-	else
-	   t = Lband_frequencies;
-
-	for (i = 0; t [i]. key != NULL; i ++) 
-	   s -> insertItem (i, t [i]. key, QVariant (i));
-}
-
-
 //	find the frequency for a given channel in a given band
-int32_t	bandHandler::Frequency (uint8_t dabBand, QString Channel) {
+int32_t	bandHandler::Frequency (QString Channel) {
 int32_t	tunedFrequency		= 0;
 struct dabFrequencies	*finger;
 int	i;
@@ -138,3 +125,32 @@ int	i;
 	return tunedFrequency;
 }
 
+int32_t	bandHandler::Frequency (int channelNumber) {
+	if (dabBand == BAND_III)
+	   return KHz (bandIII_frequencies [channelNumber]. fKHz);
+	else
+	   return KHz (Lband_frequencies [channelNumber]. fKHz);
+}
+
+QString	bandHandler::channel	(int channelNumber) {
+	if (dabBand == BAND_III)
+	   return bandIII_frequencies [channelNumber]. key;
+	else
+	   return Lband_frequencies [channelNumber]. key;
+}
+
+int	bandHandler::channels	(void) {
+int	i;
+struct dabFrequencies	*finger;
+
+	if (dabBand == BAND_III)
+	   finger = bandIII_frequencies;
+	else
+	   finger = Lband_frequencies;
+
+	for (i = 0; finger [i]. key != NULL; i ++) {
+	   if (finger [i]. fKHz == 0) {
+	      return i;
+	   }
+	}
+}

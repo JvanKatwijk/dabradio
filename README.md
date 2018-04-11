@@ -1,6 +1,6 @@
 # dabradio [![Build Status](https://travis-ci.org/JvanKatwijk/qt-dab.svg?branch=master)](https://travis-ci.org/JvanKatwijk/dabradio)
 
-dabradio is a Software for Windows, Linux and Raspberry Pi for listening to terrestrial Digital Audio Broadcasting (DAB and DAB+). It is the  smaller brother of Qt-DAB, the successor of both DAB-rpi and sdr-j-DAB, two former programs by the same author.
+dabradio is a Software for Windows, Linux and Raspberry Pi for listening to terrestrial Digital Audio Broadcasting (DAB and DAB+). It is the little brother of Qt-DAB, the successor of both DAB-rpi and sdr-j-DAB, two former programs by the same author.
 
 ------------------------------------------------------------------
 Table of Contents
@@ -19,53 +19,59 @@ Table of Contents
   * [Comment on some settings](#comment-on-some-settings)
   * [A note on intermittent sound](#a-note-on-intermittent-sound)
 * [Copyright](#copyright)
- 
-------------------------------------------------------------------
-Features
-------------------------------------------------------------------
 
-  * DAB (mp2) and DAB+ (HE-AAC v1, HE-AAC v2 and LC-AAC) decoding
-  * MOT SlideShow (SLS)
-  * Dynamic Label (DLS) 
-  * Both DAB bands supported: 
-  	* VHF Band III
-   	* L-Band (only used in Czech Republic and Vatican)
-  * Scanning function (scanning over all channels in a given band and collecting
-all services)
-  * Detailed information for selected service (SNR, bitrate, frequency, ensemble name, ensemble ID, subchannel ID, used CUs, protection level, CPU usage, program type, language, 4 quality bars)
-  * Supports various inputs from 
-  	- SDRplay (both RSP I and RSP II),
-  	- Airspy, including Airspy mini,
-   	- SDR DAB sticks (RTL2838U or similar), and
-   	- prerecorded dump (*.sdr, and *.iq) 
- 
-Data services are not  implemented, although data as subservice are - limited - implemented.
-
- ------------------------------------------------------------------
+-------------------------------------------------------------------
 Introduction
-------------------------------------------------------------------
+-------------------------------------------------------------------
 
 ![dabradio with input](/screenshot_dabradio.png?raw=true)
 
-**dabradio** is the little brother of Qt-DAB. The latter is kind of a research vehicle, with lost of options, used by only a few. The need arose to have
+**dabradio** is the little brother of Qt-DAB. The latter is kind of a research vehicle, with lots of options, used by only a few. The need arose to have
 a smaller brother, just for listening to DAB services.
 
-**dabradio** and Qt-DAB share a lot of functionality, obviously, nevertheless
+**dabradio** and Qt-DAB share a lot of functionality, obviously. Nevertheless
 to avoid even more "ifdef"s in the code, it was decided to
 maintain a GitHub repository for both of them.
 
 The Qt-free version, the "command line only" version, is named dab-cmdline, and is built around a library that does the DAB decoding. It has its own repository on Github.
 
-Next to these C++ based versions, a version in Java is being developed, it has its own repository on Github.
+Next to these C++ based versions, a version in Java is being developed, it has its own repository on Github and a GUI that is similar to the one for
+**dabradio**.
 
-**dabradio** dynamically selects the input device, there is no input device selector on the GUI.
-If an input device (one of SDRplay, AIRspy or RTLSDR stick) is attached, the software will detect and
-use that device (if more than one device is connected, the software will select one of them).
-If no external device is detected, the software will present a menu to select a file for file input.
+A new feature is that
+rather than selecting a channel, the software maintains a list of
+channels that can be received. The list is maintained
+between program invocations,
+on program start up, these channels are scanned for services.
 
-For further information please visit http://www.sdr-j.tk
+The first time the program is started, all channels are scanned,
+as is the case whenever the "reset" button is touched.
 
-Some settings are preserved between program invocations, they are stored in a file `.dabradio.ini`, to be found in the home directory. See [Comment on some settings](#comment-on-some-settings) for more details.
+The services are presented in a separate widget, for each service the
+widget contains some additional information.
+
+Device selection is automated, if a device is connected, the software
+will detect that and connect to that device. If more than one
+device is connected, one will be selected.
+
+------------------------------------------------------------------------
+Features
+------------------------------------------------------------------------
+
+  * DAB (mp2) and DAB+ (HE-AAC v1, HE-AAC v2 and LC-AAC) decoding
+  * MOT SlideShow (SLS)
+  * Dynamic Label (DLS) 
+  * Both DAB bands supported (default VHF Band III, can be set in the ini file):
+  	* VHF Band III
+   	* L-Band (only used in Czech Republic and Vatican)
+  * Scanning function (scanning over all channels in a given band and collecting
+all services)
+  * Supports input from various devices: 
+  	- SDRplay (both RSP I and RSP II),
+  	- Airspy, including Airspy mini,
+   	- SDR DAB sticks (RTL2838U or similar), and
+ 
+Data services are not visible to the use, although data as subservice are - limited - implemented.
 
 ------------------------------------------------------------------
 Windows
@@ -73,7 +79,8 @@ Windows
 
 Windows releases can be found at https://github.com/JvanKatwijk/dabradio/releases . Please copy them into the same directory you've unzipped http://www.sdr-j.tk/windows-bin.zip as it uses the same libraries.
 
-If you want to compile it by yourself, please install Qt through its online installer, see https://www.qt.io/ 
+If you want to compile it by yourself, please install Qt
+through its online installer, see https://www.qt.io/ 
 
 ------------------------------------------------------------------
 Ubuntu Linux
@@ -81,7 +88,8 @@ Ubuntu Linux
 
 If you are not familar with compiling then please continue reading by jumping to chapter [appImage](#appimage-for-x64-linux-systems) which is much easier for Linux beginners.
 
-Ubuntu 16.04 (and on) have good support for Qt5 and qwt (compiled for Qt5).
+Ubuntu 16.04 (and on) have good support for Qt5 (note that contrary to Qt-DAB
+no use is made of the qwt library).
 For generating an executable under Ubuntu (16.04 or newer), you can put the following commands into a script. 
 (For Ubuntu 14.04 look into the package manager for Qt4 packages)
 
@@ -140,12 +148,7 @@ For generating an executable under Ubuntu (16.04 or newer), you can put the foll
 	
 4. Edit the `dabradio.pro` file for configuring the supported devices and other options. Comment the respective lines out if you don't own an Airspy (mini) or an SDRplay.
 
-5. If DAB spectrum and the constellation diagram should be displayed, check the installation path to qwt. If you were downloading it from http://qwt.sourceforge.net/qwtinstall.html please mention the correct path in `dabradio.pro` file (for other installation change it accordingly): 
-  ```
-  INCLUDEPATH += /usr/local/include  /usr/local/qwt-6.1.3
-  ```
-	
-6. Build and make
+5. Build and make
   ```
   qmake dabradio.pro
   make
@@ -162,16 +165,14 @@ Configuring using the dabradio.pro file
 
 Options in the configuration is to select or unselect devices.
 
-Comment the lines out by prefixing the line with a `#` in the `qt-dab.pro` file (section "unix") for the device(s) you want to exclude in the configuration. In the example below, rtl_tcp (i.e. the connection to the rtlsdr server) won't be used.
+Comment the lines out by prefixing the line with a `#` in the `qt-dab.pro` file (section "unix") for the device(s) you want to exclude in the configuration.
 ```
 CONFIG          += dabstick
 CONFIG          += sdrplay
 CONFIG          += airspy
 ```
 
-Remark: Input from pre-recorded files (8 bit unsigned `*.raw` and `*.iq' as well as 16-bit "wav" `*.sdr` files) is configured by default.
-
-Audio samples are - by default - sent to an audio device using the portaudio library.
+Audio samples are sent to an audio device using the portaudio library.
 
 ------------------------------------------------------------------
 Configuring using CMake
@@ -206,9 +207,9 @@ the new RSP-1a, it is assumed that at least library version 2.09 is installed.
 Qt
 ------------------------------------------------------------------
 
-The software uses the Qt library and - for the spectrum and the constellation diagram - the qwt library.
-
-The `CMakeLists.txt` assumes Qt5, if you want to use Qt4, and you want to have the spectrum in the configuration, be aware of the binding of the qwt library (i.e. Qt4 and a qwt that uses Qt5 does not work well).  
+The software uses the Qt library, 
+the `CMakeLists.txt` assumes Qt5, the dabradio.pro file can
+easily be changed to use Qt4.
 
 -----------------------------------------------------------------
 Raspberry PI
@@ -220,7 +221,7 @@ One remark: getting "sound" is not always easy. Be certain that you have install
 
 In arch, it was essential to add the username to the group "audio".
 
-The most recent distribution of Raspbian Stretch (i.e. august 2017) supports both Qt5 and a qwt compiled against Qt5.
+Raspbian Stretch (i.e. august 2017) supports Qt5 well.
 
 IMPORTANT NOTE:
 Since I was studying the (potential) difference in behaviour between a version with and a version without concurrency in the front end, there is a setting in the ".pro" file for selecting this.

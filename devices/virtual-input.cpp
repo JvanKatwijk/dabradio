@@ -27,9 +27,6 @@
 
 	virtualInput::virtualInput (void) {
 	lastFrequency	= 100000;
-	vfoOffset	= 0;
-	theGain		= 50;
-	coarseOffset	= 0;
 }
 
 	virtualInput::~virtualInput (void) {
@@ -67,11 +64,4 @@ int32_t	virtualInput::defaultFrequency	(void) {
 void	virtualInput::resetBuffer	(void) {
 }
 
-void	virtualInput::setOffset		(int32_t o) {
-	coarseOffset = o;
-}
-
-int32_t	virtualInput::getOffset		(void) {
-	return coarseOffset;
-}
 

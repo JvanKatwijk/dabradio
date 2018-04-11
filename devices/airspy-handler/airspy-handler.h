@@ -17,15 +17,12 @@
 #ifndef __AIRSPY_HANDLER__
 #define	__AIRSPY_HANDLER__
 
-#include	<QObject>
 #include	<QSettings>
-#include	<QFrame>
 #include	<vector>
 #include	<atomic>
 #include	"dab-constants.h"
 #include	"ringbuffer.h"
 #include	"virtual-input.h"
-#include	"ui_airspy-widget.h"
 #ifndef	__MINGW32__
 #include	"libairspy/airspy.h"
 #else
@@ -81,8 +78,7 @@ typedef int (*pfn_airspy_set_linearity_gain) (struct airspy_device* device, uint
 typedef int (*pfn_airspy_set_sensitivity_gain)(struct airspy_device* device, uint8_t value);
 }
 
-class airspyHandler: public virtualInput, public Ui_airspyWidget {
-Q_OBJECT
+class airspyHandler: public virtualInput {
 public:
 			airspyHandler		(QSettings *);
 			~airspyHandler		(void);
@@ -97,17 +93,12 @@ public:
 	void		resetBuffer		(void);
 	int16_t		bitDepth		(void);
 	int16_t		currentTab;
-private slots:
-	void		set_linearity		(int value);
-	void		set_sensitivity		(int value);
-	void		set_lna_gain		(int value);
-	void		set_mixer_gain		(int value);
-	void		set_vga_gain		(int value);
-	void		set_lna_agc		(void);
-	void		set_mixer_agc		(void);
-	void		set_rf_bias		(void);
-	void		show_tab		(int);
+	void		set_Gain		(int value);
+	void		set_autoGain		(bool b);
 private:
+	QSettings	*airspySettings;
+	int		gainValue;
+	int		autogainValue;
 	bool		load_airspyFunctions	(void);
 //	The functions to be extracted from the dll/.so file
 	pfn_airspy_init		   my_airspy_init;
@@ -137,7 +128,6 @@ private:
 	HINSTANCE	Handle_usb;
 	HINSTANCE	Handle;
 	bool		libraryLoaded;
-	QFrame		*myFrame;
 	bool		success;
 	std::atomic<bool>	running;
 	bool		lna_agc;
@@ -145,16 +135,13 @@ private:
 	bool		rf_bias;
 const	char*		board_id_name (void);
 
-	int16_t		vgaGain;
-	int16_t		mixerGain;
-	int16_t		lnaGain;
+	int16_t		theGain;
 	int32_t		selectedRate;
 	int16_t		convBufferSize;
 	int16_t		convIndex;
 	std::vector <complex<float> >	convBuffer;
 	int16_t		mapTable_int   [4 * 512];
 	float		mapTable_float [4 * 512];
-	QSettings	*airspySettings;
 	RingBuffer<std::complex<float>> *theBuffer;
 	int32_t		inputRate;
 	airspyFilter	*filter;

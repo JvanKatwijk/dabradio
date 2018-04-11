@@ -29,44 +29,15 @@ const	int	EXTIO_NS	=  8192;
 static
 const	int	EXTIO_BASE_TYPE_SIZE = sizeof (float);
 
-	airspyHandler::airspyHandler (QSettings *s) {
+	airspyHandler::airspyHandler (QSettings *airspySettings) {
 int	result, i;
 int	distance	= 10000000;
 std::vector <uint32_t> sampleRates;
 uint32_t samplerateCount;
 
-	this	-> airspySettings	= s;
-	this	-> myFrame		= new QFrame (NULL);
-	setupUi (this -> myFrame);
-	this	-> myFrame	-> show ();
-
+	gainValue		= airspySettings -> value ("gain", 90). toInt ();
+	autogainValue		= airspySettings -> value ("autogain", 0). toInt ();
 	filter			= NULL;
-	airspySettings	-> beginGroup ("airspyHandler");
-	int16_t temp 		= airspySettings -> value ("linearity", 10).
-	                                                          toInt ();
-	linearitySlider		-> setValue (temp);
-	linearityDisplay	-> display  (temp);
-	temp			= airspySettings -> value ("sensitivity", 10).
-	                                                          toInt ();
-	sensitivitySlider	-> setValue (temp);
-	sensitivityDisplay	-> display (temp);
-
-	vgaGain			= airspySettings -> value ("vga", 5).toInt ();
-	vgaSlider		-> setValue (vgaGain);
-	vgaDisplay		-> display (vgaGain);
-	mixerGain		= airspySettings -> value ("mixer", 10). toInt ();
-	mixerSlider		-> setValue (mixerGain);
-	mixerDisplay		-> display (mixerGain);
-	mixer_agc		= false;
-	lnaGain			= airspySettings -> value ("lna", 5). toInt ();
-	lnaSlider		-> setValue (lnaGain);
-	lnaDisplay		-> display  (lnaGain);
-	mixer_agc		= false;
-	lna_agc			= false;
-	rf_bias			= false;
-	coarseOffset		= airspySettings -> value ("airspyOffset", 0). toInt ();
-	airspySettings	-> endGroup ();
-
 	device			= 0;
 	serialNumber		= 0;
 	theBuffer		= NULL;
@@ -83,7 +54,6 @@ uint32_t samplerateCount;
 #ifndef	__MINGW32__
 	   fprintf (stderr, "Error = %s\n", dlerror ());
 #endif
-	   delete myFrame;
 	   throw (20);
 	}
 
@@ -97,7 +67,6 @@ uint32_t samplerateCount;
 	   dlclose (Handle);
 	
 #endif
-	   delete myFrame;
 	}
 //
 	strcpy (serial,"");
@@ -110,7 +79,6 @@ uint32_t samplerateCount;
 #else
 	   dlclose (Handle);
 #endif
-	   delete myFrame;
 	   throw (21);
 	}
 
@@ -123,7 +91,6 @@ uint32_t samplerateCount;
 #else
 	   dlclose (Handle);
 #endif
-	   delete myFrame;
 	   throw (22);
 	}
 
@@ -150,7 +117,6 @@ uint32_t samplerateCount;
 #else
 	   dlclose (Handle);
 #endif
-	   delete myFrame;
 	   throw (23);
 	}
 	else
@@ -165,19 +131,15 @@ uint32_t samplerateCount;
 #else
 	   dlclose (Handle);
 #endif
-	   delete myFrame;
 	   throw (24);
 	}
 
-	airspySettings	-> beginGroup ("airspyHandler");
-	filtering 	= airspySettings -> value ("filtering", 0). toInt ();
-	int filterDegree = airspySettings -> value ("filterdegree", 9). toInt ();
-	filterDegree	= (filterDegree & ~01) + 1;
+	filtering 	= 0;
+	int filterDegree = 9;;
 //
 //	if we apply filtering it is using a symmetric lowpass filter
 	filter		= new airspyFilter (filterDegree,
 	                                        1024000, selectedRate);
-	airspySettings	-> endGroup ();
 
 //	The sizes of the mapTables follow from the input and output rate
 //	(selectedRate / 1000) vs (2048000 / 1000)
@@ -193,39 +155,11 @@ uint32_t samplerateCount;
 
 	theBuffer	= new RingBuffer<std::complex<float>>
 	                                                    (256 * 1024);
-	tabWidget	-> setCurrentIndex (0);
-	connect (linearitySlider, SIGNAL (valueChanged (int)),
-	         this, SLOT (set_linearity (int)));
-	connect (sensitivitySlider, SIGNAL (valueChanged (int)),
-	         this, SLOT (set_sensitivity (int)));
-	connect (lnaSlider, SIGNAL (valueChanged (int)),
-	         this, SLOT (set_lna_gain (int)));
-	connect (vgaSlider, SIGNAL (valueChanged (int)),
-	         this, SLOT (set_vga_gain (int)));
-	connect (mixerSlider, SIGNAL (valueChanged (int)),
-	         this, SLOT (set_mixer_gain (int)));
-	connect (lnaButton, SIGNAL (clicked (void)),
-	         this, SLOT (set_lna_agc (void)));
-	connect (mixerButton, SIGNAL (clicked (void)),
-	         this, SLOT (set_mixer_agc (void)));
-	connect (biasButton, SIGNAL (clicked (void)),
-	         this, SLOT (set_rf_bias (void)));
-	connect (tabWidget, SIGNAL (currentChanged (int)),
-	         this, SLOT (show_tab (int)));
-	displaySerial	-> setText (getSerial ());
-	running. store (false);
-	show_tab (0);			// will set currentTab
+	set_Gain	(gainValue);
+	set_autoGain (autogainValue != 0);
 }
 
 	airspyHandler::~airspyHandler (void) {
-	airspySettings	-> beginGroup ("airspyHandler");
-	airspySettings -> setValue ("linearity", linearitySlider -> value ());
-	airspySettings -> setValue ("sensitivity", sensitivitySlider -> value ());
-	airspySettings -> setValue ("vga", vgaGain);
-	airspySettings -> setValue ("mixer", mixerGain);
-	airspySettings -> setValue ("lna", lnaGain);
-	airspySettings	-> setValue ("airspyOffset", coarseOffset);
-	airspySettings	-> endGroup ();
 	if (device != NULL) {
 	   int result = my_airspy_stop_rx (device);
 	   if (result != AIRSPY_SUCCESS) {
@@ -241,7 +175,6 @@ uint32_t samplerateCount;
 	}
 	if (filter	!= NULL)
 	   delete filter;
-	delete myFrame;
 	if (Handle == NULL) {
 	   return;	// nothing achieved earlier
 	}
@@ -281,23 +214,13 @@ int32_t	bufSize	= EXTIO_NS * EXTIO_BASE_TYPE_SIZE * 2;
 
 	theBuffer	-> FlushRingBuffer ();
 	result = my_airspy_set_sample_type (device, AIRSPY_SAMPLE_INT16_IQ);
-//	result = my_airspy_set_sample_type (device, AIRSPY_SAMPLE_FLOAT32_IQ);
 	if (result != AIRSPY_SUCCESS) {
 	   printf ("my_airspy_set_sample_type () failed: %s (%d)\n",
 	            my_airspy_error_name ((airspy_error)result), result);
 	   return false;
 	}
 
-	if (currentTab == 0)
-	   set_sensitivity	(sensitivitySlider -> value ());
-	else 
-	if (currentTab	== 1)
-	   set_linearity	(linearitySlider -> value ());
-	else {
-	   set_vga_gain		(vgaGain);
-	   set_mixer_gain	(mixerGain);
-	   set_lna_gain		(lnaGain);
-	}
+	set_Gain	(gainValue);
 	
 	result = my_airspy_start_rx (device,
 	            (airspy_sample_block_cb_fn)callback, this);
@@ -425,14 +348,12 @@ int result = my_airspy_open (&device);
 	}
 }
 
-//
-//	These functions are added for the SDR-J interface
 void	airspyHandler::resetBuffer (void) {
 	theBuffer	-> FlushRingBuffer ();
 }
 
 int16_t	airspyHandler::bitDepth (void) {
-	return 13;
+	return 12;
 }
 
 int32_t	airspyHandler::getSamples (std::complex<float> *v, int32_t size) {
@@ -444,135 +365,30 @@ int32_t	airspyHandler::Samples	(void) {
 	return theBuffer	-> GetRingBufferReadAvailable ();
 }
 //
-#define GAIN_COUNT (22)
-
-uint8_t airspy_linearity_vga_gains[GAIN_COUNT] = { 13, 12, 11, 11, 11, 11, 11, 10, 10, 10, 10, 10, 10, 10, 10, 10, 9, 8, 7, 6, 5, 4 };
-uint8_t airspy_linearity_mixer_gains[GAIN_COUNT] = { 12, 12, 11, 9, 8, 7, 6, 6, 5, 0, 0, 1, 0, 0, 2, 2, 1, 1, 1, 1, 0, 0 };
-uint8_t airspy_linearity_lna_gains[GAIN_COUNT] = { 14, 14, 14, 13, 12, 10, 9, 9, 8, 9, 8, 6, 5, 3, 1, 0, 0, 0, 0, 0, 0, 0 };
-uint8_t airspy_sensitivity_vga_gains[GAIN_COUNT] = { 13, 12, 11, 10, 9, 8, 7, 6, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4 };
-uint8_t airspy_sensitivity_mixer_gains[GAIN_COUNT] = { 12, 12, 12, 12, 11, 10, 10, 9, 9, 8, 7, 4, 4, 4, 3, 2, 2, 1, 0, 0, 0, 0 };
-uint8_t airspy_sensitivity_lna_gains[GAIN_COUNT] = { 14, 14, 14, 14, 14, 14, 14, 14, 14, 13, 12, 12, 9, 9, 8, 7, 6, 5, 3, 2, 1, 0 };
-
-void	airspyHandler::set_linearity (int value) {
-int	result = my_airspy_set_linearity_gain (device, value);
-int	temp;
-	if (result != AIRSPY_SUCCESS) {
-	   printf ("airspy_set_lna_gain () failed: %s (%d)\n",
-	            my_airspy_error_name ((airspy_error)result), result);
-	   return;
-	}
-	linearityDisplay	-> display (value);
-	temp	= airspy_linearity_lna_gains [GAIN_COUNT - 1 - value];
-	linearity_lnaDisplay	-> display (temp);
-	temp	= airspy_linearity_mixer_gains [GAIN_COUNT - 1 - value];
-	linearity_mixerDisplay	-> display (temp);
-	temp	= airspy_linearity_vga_gains [GAIN_COUNT - 1 - value];
-	linearity_vgaDisplay	-> display (temp);
-}
-
-void	airspyHandler::set_sensitivity (int value) {
-int	result = my_airspy_set_sensitivity_gain (device, value);
-int	temp;
+void	airspyHandler::set_Gain (int theGain) {
+int	realGain	= theGain * 21 / 100;
+int	result = my_airspy_set_sensitivity_gain (device, realGain);
+	gainValue	= theGain;
 	if (result != AIRSPY_SUCCESS) {
 	   printf ("airspy_set_mixer_gain() failed: %s (%d)\n",
 	            my_airspy_error_name ((airspy_error)result), result);
 	   return;
 	}
-	sensitivityDisplay	-> display (value);
-	temp	= airspy_sensitivity_lna_gains [GAIN_COUNT - 1 - value];
-	sensitivity_lnaDisplay	-> display (temp);
-	temp	= airspy_sensitivity_mixer_gains [GAIN_COUNT - 1 - value];
-	sensitivity_mixerDisplay	-> display (temp);
-	temp	= airspy_sensitivity_vga_gains [GAIN_COUNT - 1 - value];
-	sensitivity_vgaDisplay	-> display (temp);
 }
 
 //
-
-//	Original functions from the airspy extio dll
-/* Parameter value shall be between 0 and 15 */
-void	airspyHandler::set_lna_gain (int value) {
-int result = my_airspy_set_lna_gain (device, lnaGain = value);
-
-	if (result != AIRSPY_SUCCESS) {
-	   printf ("airspy_set_lna_gain () failed: %s (%d)\n",
-	            my_airspy_error_name ((airspy_error)result), result);
-	}
-	else
-	   lnaDisplay	-> display (value);
-}
-
-/* Parameter value shall be between 0 and 15 */
-void	airspyHandler::set_mixer_gain (int value) {
-int result = my_airspy_set_mixer_gain (device, mixerGain = value);
-
-	if (result != AIRSPY_SUCCESS) {
-	   printf ("airspy_set_mixer_gain() failed: %s (%d)\n",
-	            my_airspy_error_name ((airspy_error)result), result);
-	}
-	else
-	   mixerDisplay	-> display (value);
-}
-
-/* Parameter value shall be between 0 and 15 */
-void	airspyHandler::set_vga_gain (int value) {
-int result = my_airspy_set_vga_gain (device, vgaGain = value);
-
-	if (result != AIRSPY_SUCCESS) {
-	   printf ("airspy_set_vga_gain () failed: %s (%d)\n",
-	            my_airspy_error_name ((airspy_error)result), result);
-	}
-	else
-	   vgaDisplay	-> display (value);
-}
-//
-//	agc's
-/* Parameter value:
-	0=Disable LNA Automatic Gain Control
-	1=Enable LNA Automatic Gain Control
-*/
-void	airspyHandler::set_lna_agc (void) {
-	lna_agc	= !lna_agc;
-int result = my_airspy_set_lna_agc (device, lna_agc ? 1 : 0);
-
-	if (result != AIRSPY_SUCCESS) {
-	   printf ("airspy_set_lna_agc() failed: %s (%d)\n",
-	            my_airspy_error_name ((airspy_error)result), result);
-	}
-	if (lna_agc)
-	   lnaButton	-> setText ("lna agc on");
-	else
-	   lnaButton	-> setText ("lna agc");
-}
-
 /* Parameter value:
 	0=Disable MIXER Automatic Gain Control
 	1=Enable MIXER Automatic Gain Control
 */
-void	airspyHandler::set_mixer_agc (void) {
-	mixer_agc	= !mixer_agc;
+void	airspyHandler::set_autoGain (bool b) {
+	mixer_agc	= b;
 
 int result = my_airspy_set_mixer_agc (device, mixer_agc ? 1 : 0);
 
 	if (result != AIRSPY_SUCCESS) {
 	   printf ("airspy_set_mixer_agc () failed: %s (%d)\n",
 	            my_airspy_error_name ((airspy_error)result), result);
-	}
-	if (mixer_agc)
-	   mixerButton	-> setText ("mixer agc on");
-	else
-	   mixerButton	-> setText ("mixer agc");
-}
-
-
-/* Parameter value shall be 0=Disable BiasT or 1=Enable BiasT */
-void	airspyHandler::set_rf_bias (void) {
-	rf_bias	= !rf_bias;
-int result = my_airspy_set_rf_bias (device, rf_bias ? 1 : 0);
-
-	if (result != AIRSPY_SUCCESS) {
-	   printf("airspy_set_rf_bias() failed: %s (%d)\n",
-	           my_airspy_error_name ((airspy_error)result), result);
 	}
 }
 
@@ -748,19 +564,5 @@ bool	airspyHandler::load_airspyFunctions (void) {
 	}
 
 	return true;
-}
-
-void	airspyHandler::show_tab (int t) {
-	if (t == 0)		// sensitivity
-	   set_sensitivity	(sensitivitySlider -> value ());
-	else
-	if (t == 1)		// linearity
-	   set_linearity	(linearitySlider -> value ());
-	else {			// classic view
-	   set_vga_gain		(vgaGain);
-	   set_mixer_gain	(mixerGain);
-	   set_lna_gain		(lnaGain);
-	}
-	currentTab	= t;
 }
 

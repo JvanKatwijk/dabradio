@@ -52,17 +52,16 @@ public:
 	                         uint8_t,
 	                         int16_t,
 	                         int16_t,
-	                         QString,
-	                         RingBuffer<std::complex<float>>	*);
+	                         QString);
 		~dabProcessor	(void);
 	void		reset			(void);
+	void		start			(int, bool);
 	void		stop			(void);
 	void		setOffset		(int32_t);
 	void		coarseCorrectorOn	(void);
 	void		coarseCorrectorOff	(void);
 	void		startDumping		(SNDFILE *);
 	void		stopDumping		(void);
-	void		set_scanMode		(bool);
 //
 //	inheriting from our delegates
 	void		setSelectedService      (QString &);
@@ -77,14 +76,15 @@ public:
 	                                             packetdata *, int16_t);
 	void		reset_msc		(void);
 	void		set_audioChannel	(audiodata *,
-	                                             RingBuffer<int16_t> *);
+	                                         RingBuffer<int16_t> *,
+	                                         RingBuffer<uint8_t> *);
 	void		set_dataChannel		(packetdata *,
 	                                             RingBuffer<uint8_t> *);
         int32_t		get_ensembleId          (void);
         QString		get_ensembleName        (void);
 	void		clearEnsemble		(void);
 private:
-	virtualInput	*theRig;
+	virtualInput	*theDevice;
 	dabParams	params;
 	sampleReader	myReader;
 	RadioInterface	*myRadioInterface;
@@ -92,7 +92,7 @@ private:
 	mscHandler	my_mscHandler;
 
 	int16_t		attempts;
-	bool		scanMode;
+	bool		giveSignal;
 	int32_t		T_null;
 	int32_t		T_u;
 	int32_t		T_s;

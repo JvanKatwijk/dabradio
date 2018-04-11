@@ -31,13 +31,23 @@
 #include        "dab-constants.h"
 #include        "radio.h"
 
+#ifdef	HAVE_RTLSDR
+#include	"rtlsdr-handler.h"
+#endif
+#ifdef	HAVE_SDRPLAY
+#include	"sdrplay-handler.h"
+#endif
+#ifdef	HAVE_AIRSPY
+#include	"airspy-handler.h"
+#endif
 #define DEFAULT_INI     ".dabradio.ini"
+#define	SERVICE_LIST	".dabradio-stations.bin"
 
 #ifndef	GITHASH
 #define	GITHASH	"      "
 #endif
 
-QString fullPathfor (QString v) {
+QString fullPathfor (QString v, QString aa) {
 QString fileName;
 
 	if (v == QString (""))
@@ -51,45 +61,46 @@ QString fileName;
 	fileName. append (v);
 	fileName = QDir::toNativeSeparators (fileName);
 
-	if (!fileName. endsWith (".ini"))
-	   fileName. append (".ini");
+	if (!fileName. endsWith (aa))
+	   fileName. append (aa);
 
 	return fileName;
 }
 
-void    setTranslator (QString Language);
+void    	setTranslator (QString Language);
+virtualInput	*setDevice (QSettings *dabSettings);
 
 int     main (int argc, char **argv) {
-QString initFileName = fullPathfor (QString (DEFAULT_INI));
+QString initFileName	= fullPathfor (QString (DEFAULT_INI), ".ini");
+QString serviceList	= fullPathfor (QString (SERVICE_LIST), ".bin");
 RadioInterface  *MyRadioInterface;
-
+virtualInput	*theDevice;
 // Default values
 QSettings       *dabSettings;           // ini file
 int     opt;
-bool	rawFile_flag	= false;
 
 	QCoreApplication::setOrganizationName ("Lazy Chair Computing");
 	QCoreApplication::setOrganizationDomain ("Lazy Chair Computing");
 	QCoreApplication::setApplicationName ("dabradio");
 	QCoreApplication::setApplicationVersion (QString (CURRENT_VERSION) + " Git: " + GITHASH);
 
-	while ((opt = getopt (argc, argv, "i:R")) != -1) {
+	while ((opt = getopt (argc, argv, "i:c:")) != -1) {
 	   switch (opt) {
 	      case 'i':
-	         initFileName = fullPathfor (QString (optarg));
+	         initFileName	= fullPathfor (QString (optarg), ".ini");
 	         break;
 
-	      case 'R':
-	         rawFile_flag	= true;
+	      default:
 	         break;
 
-	     default:
+	      case 'c':
+	         serviceList	= fullPathfor (QString (optarg), ".bin");
 	         break;
 	   }
 	}
 
+	
 	dabSettings =  new QSettings (initFileName, QSettings::IniFormat);
-
 /*
  *      Before we connect control to the gui, we have to
  *      instantiate
@@ -100,11 +111,19 @@ bool	rawFile_flag	= false;
 	qDebug() << "main:" <<  "Detected system language" << locale;
 	setTranslator (locale);
 
-	a. setWindowIcon (QIcon (":/qt-dab.ico"));
+	theDevice	= setDevice (dabSettings);
+	if (theDevice == NULL) {
+	   fprintf (stderr, "sorry, no device found, fatal\n");
+	   exit (1);
+	}
+//	a. setWindowIcon (QIcon (":/dab-radio.ico"));
 
+	QString dabBand	= dabSettings -> value ("dabBand", "Band III"). toString ();
+	bandHandler my_bandHandler (dabBand);
 	MyRadioInterface = new RadioInterface (dabSettings,
-	                                       rawFile_flag
-                                               );
+	                                       serviceList,
+	                                       &my_bandHandler,
+	                                       theDevice);
 	MyRadioInterface -> show ();
 
 #if QT_VERSION >= 0x050600
@@ -114,6 +133,7 @@ bool	rawFile_flag	= false;
 /*
  *      done:
  */
+	dabSettings -> sync ();
 	fprintf (stderr, "back in main program\n");
 	fflush (stdout);
 	fflush (stderr);
@@ -144,3 +164,27 @@ QTranslator *Translator = new QTranslator;
 	QLocale::setDefault (curLocale);
 }
 
+virtualInput	*setDevice (QSettings *dabSettings) {
+virtualInput	*inputDevice	= NULL;
+int	gain;
+///	OK, everything quiet, now let us see what to do
+#ifdef	HAVE_AIRSPY
+	try {
+	   inputDevice	= new airspyHandler (dabSettings);
+	   return inputDevice;
+	} catch (int e) {}
+#endif
+#ifdef	HAVE_SDRPLAY
+	try {
+	   inputDevice	= new sdrplayHandler (dabSettings);
+	   return inputDevice;
+	} catch (int e) {}
+#endif
+#ifdef	HAVE_RTLSDR
+	try {
+	   inputDevice	= new rtlsdrHandler (dabSettings);
+	   return inputDevice;
+	} catch (int e) {}
+#endif
+	return NULL;
+}
