@@ -318,6 +318,7 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
 	endif()
 #
 #
+	QT4_WRAP_UI (UIS ${${objectName}_UIS})
 
 	include_directories (
 	          ${SDRPLAY_INCLUDES}
