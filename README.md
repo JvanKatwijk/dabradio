@@ -26,8 +26,7 @@ Introduction
 
 ![dabradio with input](/screenshot_dabradio.png?raw=true)
 
-**dabradio** is the little brother of Qt-DAB. The latter is kind of a research vehicle, with lots of options, used by only a few. The need arose to have
-a smaller brother, just for listening to DAB services.
+**dabradio** is the little brother of Qt-DAB. The latter is kind of a research vehicle, with lots of options, most of them used by only a few. The need arose to have a smaller brother, just for tuning to and listening to DAB services.
 
 **dabradio** and Qt-DAB share a lot of functionality, obviously. Nevertheless
 to avoid even more "ifdef"s in the code, it was decided to
@@ -43,6 +42,9 @@ rather than selecting a channel, the software maintains a list of
 channels that can be received. The list is maintained
 between program invocations,
 on program start up, these channels are scanned for services.
+
+The GUI does not provide buttons to select the Mode or the Band. Defaults are Mode 1 and the VHF Band III. In the ".ini" file
+(a file .dabradio.ini in the home directory of the user) the Mode can be set as well as the band.
 
 The first time the program is started, all channels are scanned,
 as is the case whenever the "reset" button is touched.
@@ -194,8 +196,6 @@ The default location for installation depends on your system, mostly `/usr/local
 
 For other options, see the `CMakeLists.txt` file.
 
-Important: Note that CMakeLists.txt file expects the appropriate Qt version (and - if configured - the qwt library) to be installed.
-
 -----------------------------------------------------------------
 SDRplay
 -----------------------------------------------------------------
@@ -223,13 +223,17 @@ In arch, it was essential to add the username to the group "audio".
 
 Raspbian Stretch (i.e. august 2017) supports Qt5 well.
 
-IMPORTANT NOTE:
-Since I was studying the (potential) difference in behaviour between a version with and a version without concurrency in the front end, there is a setting in the ".pro" file for selecting this.
-Use for the dabradio the concurrency option.
+The releases section contains an AppImage developed under and for Raspbian Stretch on an RPI2. Note that libraries for
+the rtlsdr DABstick and/or the Airspy can be obtained from repositories for Raspbian Stretch. An API library for the SDRplay can be downloaded from  sdrplay.com
 
-For the ".pro" file uncomment 
+Use is simple, install the libraries as needed, download the AppImage file, chmod 777 dabradio-ARM.AppImage to set the
+exec bit and run the program. Running is possible therefore withour compiling anything.
+
+If you want to create your own executable, pls note that an optimal use of the 4 cores of the CPU can be makde
+by uncommenting (in the ".pro" file)
 
 	#DEFINES += __THREADED_DECODING.
+	#DEFINES += __THREADED_BACKEND
 
 For the CMakeLists.txt file, uncomment 
 
