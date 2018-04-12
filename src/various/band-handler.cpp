@@ -133,8 +133,11 @@ int32_t	bandHandler::Frequency (int channelNumber) {
 }
 
 QString	bandHandler::channel	(int channelNumber) {
-	if (dabBand == BAND_III)
+	if (dabBand == BAND_III) {
+	   if ((channelNumber < 0) || (channelNumber >= 38))
+	      fprintf (stderr, "Helemaal fout %d\n", channelNumber);
 	   return bandIII_frequencies [channelNumber]. key;
+	}
 	else
 	   return Lband_frequencies [channelNumber]. key;
 }
