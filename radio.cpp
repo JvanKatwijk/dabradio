@@ -161,7 +161,6 @@ int	gain;
 	channelTimer. setInterval   (5000);
 //	timer for scanning
 	signalTimer. setSingleShot (true);
-	signalTimer. setInterval (5000);
 	selectedChannel	= QString ("");
 //
 	my_dabProcessor	= new dabProcessor (this,
@@ -194,6 +193,10 @@ int	gain;
 //	a second or so after starting the decoding,
 //	or a timeout
 void	RadioInterface:: startScanning (void) {
+	disconnect (&signalTimer, SIGNAL (timeout (void)),
+	            this, SLOT (nextChannel (void)));
+	disconnect (my_dabProcessor, SIGNAL (No_Signal_Found (void)),
+                    this, SLOT (nextChannel (void)));
 	disconnect (ensembleDisplay,
 	            SIGNAL (newService (const QString &, const QString &)),
 	            this, SLOT (selectService (const QString &, const QString &)));
