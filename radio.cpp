@@ -152,9 +152,6 @@ int	gain;
 //	The displaytimer is there to show the number of
 //	seconds running 
 	displayTimer. setInterval (1000);
-	connect (&displayTimer, SIGNAL (timeout (void)),
-	         this, SLOT (updateTimeDisplay (void)));
-	displayTimer. start (1000);
 	numberofSeconds		= 0;
 //
 //	timer for channel settings
