@@ -152,6 +152,7 @@ int	gain;
 //	The displaytimer is there to show the number of
 //	seconds running 
 	displayTimer. setInterval (1000);
+	displayTimer, start (1000);
 	numberofSeconds		= 0;
 //
 //	timer for channel settings
@@ -238,7 +239,7 @@ void	RadioInterface::nextChannel (void) {
 	signalTimer. stop ();
 	my_dabProcessor -> stop ();
 	channelNumber++;
-	while (channelNumber < theBand -> channels ()) {
+	while (!(channelNumber >= theBand -> channels ())) {
 	   QString channel = theBand -> channel (channelNumber);
 	   if (dabSettings -> value (channel, 1). toInt () > 0) {
 	      dabSettings -> setValue (channel, -1);
