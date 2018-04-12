@@ -192,10 +192,6 @@ int	gain;
 //	a second or so after starting the decoding,
 //	or a timeout
 void	RadioInterface:: startScanning (void) {
-	connect (&signalTimer, SIGNAL (timeout (void)),
-	         this, SLOT (nextChannel (void)));
-        connect (my_dabProcessor, SIGNAL (No_Signal_Found (void)),
-                 this, SLOT (nextChannel (void)));
 	disconnect (ensembleDisplay,
 	            SIGNAL (newService (const QString &, const QString &)),
 	            this, SLOT (selectService (const QString &, const QString &)));
@@ -211,6 +207,8 @@ void	RadioInterface:: startScanning (void) {
 	   channelNumber ++;
 	}
 
+	if (channelNumber >= theBand -> channels ())
+	   return;
 	QString text = "scanning ch ";
 	text. append (theBand -> channel (channelNumber. load ()));
 	set_ensembleName (text);
@@ -220,6 +218,10 @@ void	RadioInterface:: startScanning (void) {
 	services [0] = ss;	// a dummy
 	int tunedFrequency	=
 	        theBand -> Frequency (channelNumber. load ());
+	connect (&signalTimer, SIGNAL (timeout (void)),
+	         this, SLOT (nextChannel (void)));
+        connect (my_dabProcessor, SIGNAL (No_Signal_Found (void)),
+                 this, SLOT (nextChannel (void)));
 	my_dabProcessor -> start (tunedFrequency, true);
 	running. store (true);
 	signalTimer. start (5000);
@@ -240,31 +242,34 @@ void	RadioInterface::nextChannel (void) {
 	   QString channel = theBand -> channel (channelNumber);
 	   if (dabSettings -> value (channel, 1). toInt () > 0) {
 	      dabSettings -> setValue (channel, -1);
-	      int tunedFrequency  =
-                 theBand -> Frequency (channelNumber);
-	      QString text = "scanning ch ";
-	      text. append (theBand -> channel (channelNumber));
-	      set_ensembleName (text);
-	      connect (&signalTimer, SIGNAL (timeout (void)),
-	               this, SLOT (nextChannel (void)));
-              connect (my_dabProcessor, SIGNAL (No_Signal_Found (void)),
-                       this, SLOT (nextChannel (void)));
-	      my_dabProcessor	-> start (tunedFrequency, true);
-	      signalTimer. start (5000);
-	      return;
+	      break;
 	   }
 	   channelNumber ++;
 	}
 
-	scanning = false;	
-	set_ensembleName ("end of scan");
-	serviceLabel -> setText ("select a services");
-	serviceLabel -> setStyleSheet ("QLabel {background-color : green}");
-	connect (ensembleDisplay,
-	         SIGNAL (newService (const QString &, const QString &)),
-	         this, SLOT (selectService (const QString &, const QString &)));
-	connect (resetButton, SIGNAL (clicked (void)),
-	         this, SLOT (reset (void)));
+	if (channelNumber >= theBand -> channels ()) {
+	   scanning = false;	
+	   set_ensembleName ("end of scan");
+	   serviceLabel -> setText ("select a services");
+	   serviceLabel -> setStyleSheet ("QLabel {background-color : green}");
+	   connect (ensembleDisplay,
+	            SIGNAL (newService (const QString &, const QString &)),
+	            this, SLOT (selectService (const QString &, const QString &)));
+	   connect (resetButton, SIGNAL (clicked (void)),
+	            this, SLOT (reset (void)));
+	   return;
+	}
+	int tunedFrequency  =
+              theBand -> Frequency (channelNumber);
+	QString text = "scanning ch ";
+	text. append (theBand -> channel (channelNumber));
+	set_ensembleName (text);
+	connect (&signalTimer, SIGNAL (timeout (void)),
+	         this, SLOT (nextChannel (void)));
+        connect (my_dabProcessor, SIGNAL (No_Signal_Found (void)),
+                 this, SLOT (nextChannel (void)));
+	my_dabProcessor	-> start (tunedFrequency, true);
+	signalTimer. start (5000);
 }
 
 void	RadioInterface::reset (void) {
