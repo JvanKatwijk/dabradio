@@ -225,8 +225,8 @@ void	RadioInterface:: startScanning (void) {
 	        theBand -> Frequency (channelNumber. load ());
 	connect (&signalTimer, SIGNAL (timeout (void)),
 	         this, SLOT (nextChannel (void)));
-//	connect (my_dabProcessor, SIGNAL (No_Signal_Found (void)),
-//	         this, SLOT (nextChannel (void)));
+	connect (my_dabProcessor, SIGNAL (No_Signal_Found (void)),
+	         this, SLOT (nextChannel (void)));
 	my_dabProcessor -> start (tunedFrequency, true);
 	running. store (true);
 	signalTimer. start (5000);
@@ -271,8 +271,8 @@ void	RadioInterface::nextChannel (void) {
 	set_ensembleName (text);
 	connect (&signalTimer, SIGNAL (timeout (void)),
 	         this, SLOT (nextChannel (void)));
-//	connect (my_dabProcessor, SIGNAL (No_Signal_Found (void)),
-//	         this, SLOT (nextChannel (void)));
+	connect (my_dabProcessor, SIGNAL (No_Signal_Found (void)),
+	         this, SLOT (nextChannel (void)));
 	my_dabProcessor	-> start (tunedFrequency, true);
 	signalTimer. start (5000);
 }
