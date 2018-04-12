@@ -54,6 +54,7 @@ int	gain;
 	dabSettings		= Si;
 	inputDevice		= theDevice;
 	this	-> theBand	= theBand;
+	channels		= theBand	-> channels ();
 	running. store (false);
 	scanning		= false;
 	isSynced		= UNSYNCED;
@@ -199,7 +200,7 @@ void	RadioInterface:: startScanning (void) {
 	serviceCount	= 0;
 	serviceCountDisplay -> display (serviceCount);
 	channelNumber = 0;
-	while (channelNumber < theBand -> channels ()) {
+	while (channelNumber < channels) {
 	   QString channel = theBand -> channel (channelNumber);
 	   if (dabSettings -> value (channel, 1). toInt () > 0) {
 	      dabSettings -> setValue (channel, -1);
@@ -208,7 +209,7 @@ void	RadioInterface:: startScanning (void) {
 	   channelNumber ++;
 	}
 
-	if (channelNumber >= theBand -> channels ())
+	if (channelNumber >= channels)
 	   return;
 	QString text = "scanning ch ";
 	text. append (theBand -> channel (channelNumber. load ()));
@@ -239,7 +240,7 @@ void	RadioInterface::nextChannel (void) {
 	signalTimer. stop ();
 	my_dabProcessor -> stop ();
 	channelNumber++;
-	while (!(channelNumber >= theBand -> channels ())) {
+	while (!(channelNumber >= channels)) {
 	   QString channel = theBand -> channel (channelNumber);
 	   if (dabSettings -> value (channel, 1). toInt () > 0) {
 	      dabSettings -> setValue (channel, -1);
@@ -248,7 +249,7 @@ void	RadioInterface::nextChannel (void) {
 	   channelNumber ++;
 	}
 
-	if (channelNumber >= theBand -> channels ()) {
+	if (channelNumber >= channels) {
 	   scanning = false;	
 	   set_ensembleName ("end of scan");
 	   serviceLabel -> setText ("select a services");
@@ -280,7 +281,7 @@ void	RadioInterface::reset (void) {
 	         this, SLOT (selectService (const QString &, const QString &)));
 	disconnect (resetButton, SIGNAL (clicked (void)),
 	            this, SLOT (reset (void)));
-	for (int i = 0; i < theBand -> channels (); i ++) {
+	for (int i = 0; i < channels; i ++) {
 	   QString channel = theBand -> channel (i);
 	   dabSettings -> setValue (channel, 1);
 	}
