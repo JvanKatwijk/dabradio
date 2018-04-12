@@ -134,8 +134,6 @@ int32_t	bandHandler::Frequency (int channelNumber) {
 
 QString	bandHandler::channel	(int channelNumber) {
 	if (dabBand == BAND_III) {
-	   if ((channelNumber < 0) || (channelNumber >= 38))
-	      fprintf (stderr, "Helemaal fout %d\n", channelNumber);
 	   return bandIII_frequencies [channelNumber]. key;
 	}
 	else
@@ -151,9 +149,6 @@ struct dabFrequencies	*finger;
 	else
 	   finger = Lband_frequencies;
 
-	for (i = 0; finger [i]. key != NULL; i ++) {
-	   if (finger [i]. fKHz == 0) {
-	      return i;
-	   }
-	}
+	for (i = 0; finger [i]. key != NULL; i ++);
+	return i;
 }
