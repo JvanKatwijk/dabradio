@@ -63,7 +63,7 @@ if(DEFINED RTLSDR)
 endif ()
 
 
-#add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
+#add_definitions (-DTHREADED_DECODING -DTHREADED_BACKEND)	# uncomment for use for an RPI
 #
 ########################################################################
 

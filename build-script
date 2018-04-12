@@ -1,0 +1,30 @@
+   sudo apt-get update
+   sudo apt-get install qt5-qmake build-essential g++ git cmake
+   sudo apt-get install libsndfile1-dev qt5-default libfftw3-dev portaudio19-dev 
+   sudo apt-get install libfaad-dev zlib1g-dev rtl-sdr libusb-1.0-0-dev mesa-common-dev
+   sudo apt-get install libgl1-mesa-dev libqt5opengl5-dev libsamplerate0-dev
+   sudo apt-get install qtbase5-dev
+
+   sudo apt-get install librtlsdr-dev 
+
+   sudo apt-get install build-essential cmake libusb-1.0-0-dev pkg-config
+   wget https://github.com/airspy/host/archive/master.zip
+   unzip master.zip
+   cd airspyone_host-master
+   mkdir build
+   cd build
+   cmake ../ -DINSTALL_UDEV_RULES=ON
+   make
+   sudo make install
+   sudo ldconfig
+   cd ../
+   rm -rf build
+   cd ..
+   git clone https://github.com/JvanKatwijk/dabradio.git
+   cd dabradio
+   mkdir build
+   cd build
+   cmake .. -DRTLSDR=ON -DAIRSPY=ON
+   make
+
+
