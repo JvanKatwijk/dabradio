@@ -85,20 +85,20 @@ If you want to compile it by yourself, please install Qt
 through its online installer, see https://www.qt.io/ 
 
 ------------------------------------------------------------------
-Ubuntu Linux
+Linux: Ubuntu/x64 and Stretch RPI2/3
 ------------------------------------------------------------------
 
 If you are not familar with compiling then please continue reading by jumping to chapter [appImage](#appimage-for-x64-linux-systems) which is much easier for Linux beginners.
 
-Ubuntu 16.04 (and on) have good support for Qt5 (note that contrary to Qt-DAB
-no use is made of the qwt library).
-For generating an executable under Ubuntu (16.04 or newer), you can put the following commands into a script. 
-(For Ubuntu 14.04 look into the package manager for Qt4 packages)
+Ubuntu 16.04 (and on) as well as Debian/Stretch on the RPI2 and 3 have good support for Qt5 (note that contrary to Qt-DAB
+no use is made of the qwt library). 
+For generating an executable under Ubuntu (16.04 or newer) or on the RPI 2/3 running under Stretch, you can put the following commands into a script. 
+(For Ubuntu 14.04 look into the package manager for Qt4 packages).
 
 1. Fetch the required components
    ```
    sudo apt-get update
-   sudo apt-get install qt5-qmake build-essential g++
+   sudo apt-get install qt5-qmake build-essential g++ git cmake
    sudo apt-get install libsndfile1-dev qt5-default libfftw3-dev portaudio19-dev 
    sudo apt-get install libfaad-dev zlib1g-dev rtl-sdr libusb-1.0-0-dev mesa-common-dev
    sudo apt-get install libgl1-mesa-dev libqt5opengl5-dev libsamplerate0-dev libqwt-qt5-dev
@@ -215,15 +215,14 @@ easily be changed to use Qt4.
 Raspberry PI
 ------------------------------------------------------------------
 
-The dabradio software runs pretty well on the author's RPI-2. The average load on the 4 cores is somewhere between 50 and 60 percent.
+The dabradio software runs pretty well on the author's RPI-2 ans 3 The average load on the 4 cores on the RPI2
+is somewhere between 50 and 60 percent, on the RPI3B+ it is well below 50 percent.
 
 One remark: getting "sound" is not always easy. Be certain that you have installed the alsa-utils, and that you are - as non-root user - able to see devices with `aplay -L`
 
 In arch, it was essential to add the username to the group "audio".
 
-Raspbian Stretch (i.e. august 2017) supports Qt5 well.
-
-The releases section contains an AppImage developed under and for Raspbian Stretch on an RPI2. Note that libraries for
+The releases section contains an AppImage developed under and for Raspbian Stretch on an RPI2 and RPI3. Note that libraries for
 the rtlsdr DABstick and/or the Airspy can be obtained from repositories for Raspbian Stretch. An API library for the SDRplay can be downloaded from  sdrplay.com
 
 Use is simple, install the libraries as needed, download the AppImage file, chmod 777 dabradio-ARM.AppImage to set the
@@ -237,16 +236,18 @@ by uncommenting (in the ".pro" file)
 
 For the CMakeLists.txt file, uncomment 
 
-	#add_definitions (-D__THREADED_DECODING) #uncomment for the RPI
+	#add_definitions (-D__THREADED_DECODING -D__THREADED_BACKEND) #uncomment for the RPI
 
 
 ---------------------------------------------------------------------------
-appImage for x64 Linux systems
+appImages for x64 Linux systems and RPI2/3
 ---------------------------------------------------------------------------
 
-https://github.com/JvanKatwijk/dabradio/releases contains a generated appImage which is created on Ubuntu 14.04 (Trusty), and uses Qt4 (so it basically should run on any x-64 based linux system that isn't too old.). It assumes that you have installed a device, either a dabstick (i.e. rtlsdr), an Airspy or a SDRplay. All further dependencies are included. There is only one file which you have to make executable in order to run.
+https://github.com/JvanKatwijk/dabradio/releases contains a generated appImage, Qt_DAB-ARM.Appimage, which is created on Ubuntu 14.04 (Trusty), and uses Qt4 (so it basically should run on any x-64 based linux system that isn't too old.). It assumes that you have installed a device, either a dabstick (i.e. rtlsdr), an Airspy or a SDRplay. All further dependencies are included. There is only one file which you have to make executable in order to run.
+It furthermore contains an -experimental- appImage for use under Stretch on an RPI2/3, dabradio-ARM.AppImage.
+The same applies here, it assumes an installed device.
 
-Note that on start up the appImage will try to set the udev settings for the airspy and dabstick right. Libraries for the dabstick (i.e. rtlsdr) and airspy are part of the appImage. Note that while the SDRplay is selectable, the library for the device should be installed from the supplier, i.e. "www.sdrplay.com".
+Libraries for the dabstick (i.e. rtlsdr) and airspy are part of the appImage. Note that the library for the sdrplay device should be installed from the supplier, i.e. "www.sdrplay.com".
 
 All further dependencies are included
 
