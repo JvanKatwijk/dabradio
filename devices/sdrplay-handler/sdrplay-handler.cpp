@@ -175,7 +175,10 @@ ULONG APIkeyValue_length = 255;
 	serialNumber -> setText (devDesc [deviceIndex]. SerNo);
 	hwVersion = devDesc [deviceIndex]. hwVer;
         fprintf (stderr, "hwVer = %d\n", hwVersion);
-	my_mir_sdr_SetDeviceIdx (deviceIndex);
+	err = my_mir_sdr_SetDeviceIdx (deviceIndex);
+	if (err != mir_sdr_Success) {
+	   throw (33);
+	}
 
 	antennaSelector -> hide ();
 	if (hwVersion == 2) {
