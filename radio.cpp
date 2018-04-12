@@ -153,7 +153,7 @@ int	gain;
 //	The displaytimer is there to show the number of
 //	seconds running 
 	displayTimer. setInterval (1000);
-	displayTimer, start (1000);
+	displayTimer. start (1000);
 	numberofSeconds		= 0;
 //
 //	timer for channel settings
