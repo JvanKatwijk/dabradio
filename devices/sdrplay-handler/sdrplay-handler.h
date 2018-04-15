@@ -3,33 +3,30 @@
  *    Jan van Katwijk (J.vanKatwijk@gmail.com)
  *    Lazy Chair Computing
  *
- *    This file is part of the Qt-DAB program
- *    Qt-DAB is free software; you can redistribute it and/or modify
+ *    This file is part of the dabradio
+ *    dabradio is free software; you can redistribute it and/or modify
  *    it under the terms of the GNU General Public License as published by
  *    the Free Software Foundation; either version 2 of the License, or
  *    (at your option) any later version.
  *
- *    Qt-DAB is distributed in the hope that it will be useful,
+ *    dabradio is distributed in the hope that it will be useful,
  *    but WITHOUT ANY WARRANTY; without even the implied warranty of
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *    GNU General Public License for more details.
  *
  *    You should have received a copy of the GNU General Public License
- *    along with Qt-DAB; if not, write to the Free Software
+ *    along with dabradio; if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #ifndef __SDRPLAY_HANDLER__
 #define	__SDRPLAY_HANDLER__
 
-#include	<QObject>
-#include	<QFrame>
 #include	<QSettings>
 #include	<atomic>
 #include	"dab-constants.h"
 #include	"ringbuffer.h"
 #include	"virtual-input.h"
-#include	"ui_sdrplay-widget.h"
 #include	"mirsdrapi-rsp.h"
 
 typedef void (*mir_sdr_StreamCallback_t)(int16_t	*xi,
@@ -84,8 +81,7 @@ typedef mir_sdr_ErrT (*pfn_mir_sdr_ReleaseDeviceIdx) (unsigned int);
 
 
 ///////////////////////////////////////////////////////////////////////////
-class	sdrplayHandler: public virtualInput, public Ui_sdrplayWidget {
-Q_OBJECT
+class	sdrplayHandler: public virtualInput {
 public:
 			sdrplayHandler		(QSettings *);
 			~sdrplayHandler		(void);
@@ -101,6 +97,8 @@ public:
 	void		resetBuffer		(void);
 	int16_t		maxGain			(void);
 	int16_t		bitDepth		(void);
+	void		set_Gain		(int);
+	void		set_autoGain		(bool);
 //
 //	The buffer should be visible by the callback function
 	RingBuffer<std::complex<float>>	*_I_Buffer;
@@ -138,21 +136,14 @@ private:
 	uint32_t	numofDevs;
 	int16_t		deviceIndex;
 	bool		loadFunctions	(void);
-	QSettings	*sdrplaySettings;
-	QFrame		*myFrame;
 	int32_t		inputRate;
 	int32_t		vfoFrequency;
-	int		currentGred;
+	int		gainValue;
+	bool		autogainValue;
 	bool		libraryLoaded;
 	std::atomic<bool>	running;
 	HINSTANCE	Handle;
-	bool		agcMode;
 	int16_t		nrBits;
-private slots:
-	void		setExternalGain	(int);
-	void		agcControl_toggled	(int);
-	void		set_ppmControl		(int);
-	void		set_antennaControl	(const QString &);
 };
 #endif
 

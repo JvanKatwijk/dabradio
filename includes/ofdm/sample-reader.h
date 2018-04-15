@@ -45,9 +45,7 @@ class	sampleReader : public QObject {
 Q_OBJECT
 public:
 			sampleReader	(RadioInterface *mr,
-	                         	virtualInput *theRig,
-	                         	RingBuffer<std::complex<float>> *spectrumBuffer
-	       				);
+	                         	virtualInput *theRig);
 
 			~sampleReader		(void);
 		void	setRunning	(bool b);
@@ -59,10 +57,8 @@ public:
 	        void	stopDumping	(void);
 	        void	setSpectrum	(bool);
 private:
-	        bool	spectrum;
 		RadioInterface	*myRadioInterface;
 		virtualInput	*theRig;
-		RingBuffer<std::complex<float>> *spectrumBuffer;
 		std::vector<std::complex<float>> localBuffer;
 		int32_t		localCounter;
 		int32_t		bufferSize;

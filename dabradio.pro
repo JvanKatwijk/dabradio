@@ -10,12 +10,12 @@ TARGET		= dabradio-1.0
 QT		+= widgets 
 CONFIG		+= console
 QMAKE_CXXFLAGS	+= -std=c++11
-#QMAKE_CFLAGS	+=  -flto -ffast-math
-#QMAKE_CXXFLAGS	+=  -flto -ffast-math
-#QMAKE_LFLAGS	+=  -flto
-QMAKE_CFLAGS	+=  -g
-QMAKE_CXXFLAGS	+=  -g
-QMAKE_LFLAGS	+=  -g
+QMAKE_CFLAGS	+=  -flto -ffast-math
+QMAKE_CXXFLAGS	+=  -flto -ffast-math
+QMAKE_LFLAGS	+=  -flto
+#QMAKE_CFLAGS	+=  -g
+#QMAKE_CXXFLAGS	+=  -g
+#QMAKE_LFLAGS	+=  -g
 QMAKE_CXXFLAGS += -isystem $$[QT_INSTALL_HEADERS]
 RC_ICONS	=  dabradio.ico
 RESOURCES	+= resources.qrc
@@ -24,7 +24,6 @@ TRANSLATIONS = i18n/de_DE.ts i18n/it_IT.ts i18n/hu_HU.ts
 
 DEPENDPATH += . \
 	      ./src \
-	      ./dab-scope \
 	      ./includes \
 	      ./src/ofdm \
 	      ./src/backend \
@@ -46,7 +45,6 @@ DEPENDPATH += . \
 INCLUDEPATH += . \
 	      ./ \
 	      ./src \
-	      ./dab-scope \
 	      ./includes \
 	      ./includes/ofdm \
 	      ./includes/backend \
@@ -62,7 +60,8 @@ INCLUDEPATH += . \
 # Input
 HEADERS += ./radio.h \
 	   ./dab-processor.h \
-	   ./dab-scope/spectrum-handler.h \
+	   ./service-list.h \
+	   ./service-display.h \
 	   ./includes/dab-constants.h \
 	   ./includes/country-codes.h \
 	   ./includes/ofdm/sample-reader.h \
@@ -110,12 +109,12 @@ HEADERS += ./radio.h \
            ./devices/wavfiles/wavfiles.h
 
 FORMS	+= ./devices/filereader-widget.ui 
-FORMS	+= ./forms/technical_data.ui
 
 SOURCES += ./main.cpp \
 	   ./radio.cpp \
 	   ./dab-processor.cpp \
-	   ./dab-scope/spectrum-handler.cpp \
+	   ./service-list.cpp \
+	   ./service-display.cpp \
 	   ./src/ofdm/sample-reader.cpp \
 	   ./src/ofdm/ofdm-decoder.cpp \
 	   ./src/ofdm/phasereference.cpp \
@@ -250,7 +249,6 @@ LIBS		+= -lfaad
 LIBS		+= -lusb-1.0
 LIBS		+= -lz
 FORMS 		+= ./forms/dabradio.ui 
-FORMS		+= ./forms/technical_data.ui
 
 CONFIG		+= airspy
 CONFIG		+= dabstick
@@ -277,11 +275,8 @@ dabstick {
 	DEFINES		+= HAVE_RTLSDR
 	DEPENDPATH	+= ./devices/rtlsdr-handler
 	INCLUDEPATH	+= ./devices/rtlsdr-handler
-	HEADERS		+= ./devices/rtlsdr-handler/rtlsdr-handler.h \
-	                   ./devices/rtlsdr-handler/rtl-dongleselect.h
-	SOURCES		+= ./devices/rtlsdr-handler/rtlsdr-handler.cpp \
-	                   ./devices/rtlsdr-handler/rtl-dongleselect.cpp
-	FORMS		+= ./devices/rtlsdr-handler/rtlsdr-widget.ui
+	HEADERS		+= ./devices/rtlsdr-handler/rtlsdr-handler.h 
+	SOURCES		+= ./devices/rtlsdr-handler/rtlsdr-handler.cpp 
 }
 #
 #	the SDRplay
@@ -290,11 +285,8 @@ sdrplay {
 	DEFINES		+= HAVE_SDRPLAY
 	DEPENDPATH	+= ./devices/sdrplay-handler 
 	INCLUDEPATH	+= ./devices/sdrplay-handler 
-	HEADERS		+= ./devices/sdrplay-handler/sdrplay-handler.h \
-	                   ./devices/sdrplay-handler/sdrplayselect.h
-	SOURCES		+= ./devices/sdrplay-handler/sdrplay-handler.cpp \
-	                   ./devices/sdrplay-handler/sdrplayselect.cpp
-	FORMS		+= ./devices/sdrplay-handler/sdrplay-widget.ui
+	HEADERS		+= ./devices/sdrplay-handler/sdrplay-handler.h 
+	SOURCES		+= ./devices/sdrplay-handler/sdrplay-handler.cpp 
 }
 #
 #
@@ -310,7 +302,6 @@ airspy {
 	                   ./devices/airspy-handler/libairspy/airspy.h
 	SOURCES		+= ./devices/airspy-handler/airspy-handler.cpp \
 	                   ./devices/airspy-handler/airspyfilter.cpp
-	FORMS		+= ./devices/airspy-handler/airspy-widget.ui
 }
 
 #

@@ -62,10 +62,6 @@ if(DEFINED RTLSDR)
    set(RTLSDR true)
 endif ()
 
-if(DEFINED RTLTCP)
-   set(RTLTCP true)
-endif ()
-
 
 #add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
 #
@@ -128,7 +124,6 @@ endif ()
 	           .
 	           ./
 	           ./includes
-	           ./dab-scope
 	           ./includes/ofdm
 	           ./includes/backend
 	           ./includes/backend/viterbi_768
@@ -137,16 +132,13 @@ endif ()
 	           ./includes/backend/data/journaline
 	           ./includes/various
 	           ./includes/output
-	           ./includes/scopes-qwt6
 	           ./devices
-	           ./devices/rawfiles
-	           ./devices/wavfiles
 	           /usr/include/
 	)
 
 	set (${objectName}_HDRS
 	     ./dab-processor.h
-	     ./dab-scope/spectrum-handler.h
+	     ./service-list.h
              ./includes/ofdm/sample-reader.h
 	     ./includes/dab-constants.h
 	     ./includes/ofdm/phasereference.h
@@ -174,8 +166,6 @@ endif ()
 	     ./includes/backend/data/mot-data.h
 	     ./includes/backend/data/data-processor.h
 	     ./devices/virtual-input.h
-	     ./devices/rawfiles/rawfiles.h
-	     ./devices/wavfiles/wavfiles.h
 	     ./includes/output/fir-filters.h
 	     ./includes/output/audio-base.h
 	     ./includes/output/newconverter.h
@@ -191,7 +181,7 @@ endif ()
 	     ${${objectName}_SRCS}
 	     ./main.cpp
 	     ./dab-processor.cpp
-	     ./dab-scope/spectrum-handler.cpp
+	     ./service-list.cpp
              ./src/ofdm/sample-reader.cpp
 	     ./src/ofdm/ofdm-decoder.cpp
 	     ./src/ofdm/phasereference.cpp
@@ -235,8 +225,12 @@ endif ()
 	     ./src/various/text-mapper.cpp
 	)
 
+	set (${objectName}_UIS
+                ${${objectName}_UIS} ./forms/dabradio.ui)
+
 	set (${objectName}_MOCS
 	     ./dab-processor.h
+	     ./service-list.h
 	     ./includes/output/audio-base.h
 	     ./includes/ofdm/sample-reader.h
 	     ./includes/ofdm/ofdm-decoder.h
@@ -252,12 +246,8 @@ endif ()
 	     ./includes/backend/data/mot-data.h
 	     ./includes/backend/data/mot-databuilder.h
 	     ./includes/backend/data/data-processor.h
-	     ./devices/rawfiles/rawfiles.h
-	     ./devices/wavfiles/wavfiles.h
 	)
 
-	set (${objectName}_UIS
-	        ${${objectName}_UIS} ./forms/dabradio.ui ./forms/technical_data.ui)
 
 	set (${objectName}_MOCS
 	        ${${objectName}_MOCS} ./radio.h)
@@ -279,16 +269,6 @@ endif ()
 #                      /usr/local/include/
 #	   )
 #	   include_directories (${SDRPLAYLIB_INCLUDE_DIR})
-	   set (${objectName}_UIS
-	        ${${objectName}_UIS}
-	        ./devices/sdrplay-handler/sdrplay-widget.ui
-	   )
-
-	   set (${objectName}_MOCS
-	        ${${objectName}_MOCS}
-	        ./devices/sdrplay-handler/sdrplay-handler.h
-	        ./devices/sdrplay-handler/sdrplayselect.h
-	   )
 
 	   include_directories (
 	     ./devices/sdrplay-handler
@@ -297,14 +277,12 @@ endif ()
 	   set ($(objectName)_HDRS
 	        ${${objectName}_HDRS}
 	        ./devices/sdrplay-handler/sdrplay-handler.h
-	        ./devices/sdrplay-handler/sdrplayselect.h
 	        ./devices/sdrplay-handler/mirsdrapi-rsp.h
            )
 
 	   set (${objectName}_SRCS
 	        ${${objectName}_SRCS}
 	        ./devices/sdrplay-handler/sdrplay-handler.cpp
-	        ./devices/sdrplay-handler/sdrplayselect.cpp
 	   )
 
 	 add_definitions (-DHAVE_SDRPLAY)
@@ -316,16 +294,6 @@ endif ()
 #               message(FATAL_ERROR "please install airspy library")
 #           endif ()
 #	   ## include_directories (${AIRSPYLIB_INCLUDE_DIR})
-
-	   set (${objectName}_UIS
-	        ${${objectName}_UIS}
-	        ./devices/airspy-handler/airspy-widget.ui
-	   )
-
-	   set (${objectName}_MOCS
-	        ${${objectName}_MOCS}
-	        ./devices/airspy-handler/airspy-handler.h
-	   )
 
 	   include_directories (
 	     ./devices/airspy-handler
@@ -356,17 +324,6 @@ endif ()
            endif ()
 	   ###include_directories (${RTLSDR_INCLUDE_DIR})
 
-	   set (${objectName}_UIS
-	        ${${objectName}_UIS}
-	        ./devices/rtlsdr-handler/rtlsdr-widget.ui
-	   )
-
-	   set (${objectName}_MOCS
-	        ${${objectName}_MOCS}
-	        ./devices/rtlsdr-handler/rtl-dongleselect.h
-	        ./devices/rtlsdr-handler/rtlsdr-handler.h
-	   )
-
 	   include_directories (
 	        ./devices/rtlsdr-handler/
 	   )
@@ -374,13 +331,11 @@ endif ()
 	   set (${objectName}_HDRS
 	        ${${objectName}_HDRS}
 	        ./devices/rtlsdr-handler/rtlsdr-handler.h
-	        ./devices/rtlsdr-handler/rtl-dongleselect.h
 	   )
 
 	   set (${objectName}_SRCS
 	        ${${objectName}_SRCS}
 	        ./devices/rtlsdr-handler/rtlsdr-handler.cpp
-	        ./devices/rtlsdr-handler/rtl-dongleselect.cpp
 	   )
 
 	   add_definitions (-DHAVE_RTLSDR)
@@ -427,44 +382,6 @@ endif ()
 	        ./src/output/Qt-audiodevice.cpp
 	   )
 	endif (QT_AUDIO)
-
-	if (RTLTCP)
-	   find_package (Qt5Network REQUIRED)
-	   set (${objectName}_UIS
-	        ${${objectName}_UIS}
-	        ./devices/rtl_tcp/rtl_tcp-widget.ui
-	   )
-
-	   set (${objectName}_MOCS
-	        ${${objectName}_MOCS}
-	        ./devices/rtl_tcp/rtl_tcp_client.h
-	   )
-
-	   include_directories (
-	      ./devices/rtl_tcp
-	      ${Qt5Network_INCLUDE_DIRS}
-	   )
-
-	   set ($(objectName)_HDRS
-	        ${${objectName}_HDRS}
-	        ./devices/rtl_tcp/rtl_tcp_client.h
-	   )
-
-	   set (${objectName}_SRCS
-	        ${${objectName}_SRCS}
-	        ./devices/rtl_tcp/rtl_tcp_client.cpp
-	   )
-
-	   set (RTLTCP_lib Qt5::Network)
-	   add_definitions (-DHAVE_RTL_TCP)
-	endif (RTLTCP)
-
-	find_package(Qwt)
-        if (NOT QWT_FOUND)
-            message(FATAL_ERROR "please install qwt library")
-        endif ()
-	include_directories ( ${QWT_INCLUDE_DIRS})
-        list(APPEND extraLibs ${QWT_LIBRARIES})
 
 	if (USE_PORTAUDIO)
            find_package(Portaudio)

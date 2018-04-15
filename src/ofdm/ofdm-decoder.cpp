@@ -71,8 +71,6 @@ int16_t	i;
 	fft_buffer			= my_fftHandler. getVector ();
 	phaseReference			.resize (T_u);
 
-	connect (this, SIGNAL (show_snr (int)),
-	         mr, SLOT (show_snr (int)));
 	snrCount		= 0;
 	snr			= 0;	
 
@@ -228,11 +226,6 @@ void	ofdmDecoder::processBlock_0 (std::vector <std::complex<float> > buffer) {
   *	It is just an indication
   */
 
-	if (++snrCount > 10) {
-	   snr	= 0.8 * snr + 0.2 * get_snr (fft_buffer);
-	   show_snr (snr);
-	   snrCount = 0;
-	}
 /**
   *	we are now in the frequency domain, and we keep the carriers
   *	as coming from the FFT as phase reference.

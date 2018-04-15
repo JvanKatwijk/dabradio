@@ -35,18 +35,13 @@
 
 #define	C_LEVEL_SIZE	50
 	dabProcessor::dabProcessor	(RadioInterface	*mr,
-	                                 virtualInput	*theRig,
+	                                 virtualInput	*theDevice,
 	                                 uint8_t	dabMode,
 	                                 int16_t	threshold,
 	                                 int16_t	diff_length,
-	                                 QString	picturesPath,
-	                                 RingBuffer<std::complex<float>>	*spectrumBuffer
-	                                 ):
+	                                 QString	picturesPath):
 	                                 params (dabMode),
-	                                 myReader (mr,
-	                                           theRig,
-	                                           spectrumBuffer
-	                                 ),
+	                                 myReader (mr, theDevice),
 	                                 my_ficHandler (mr, dabMode),
 	                                 my_mscHandler (mr, dabMode,
 	                                                picturesPath),
@@ -56,13 +51,13 @@
 	                                                    diff_length),
 	                                 my_ofdmDecoder (mr,
 	                                                 dabMode,
-	                                                 theRig -> bitDepth (),
+	                                                 theDevice -> bitDepth (),
 	                                                 &my_ficHandler,
 	                                                 &my_mscHandler) {
 int32_t	i;
 
 	this	-> myRadioInterface	= mr;
-	this	-> theRig		= theRig;
+	this	-> theDevice		= theDevice;
 	this	-> T_null		= params. get_T_null ();
 	this	-> T_s			= params. get_T_s ();
 	this	-> T_u			= params. get_T_u ();
@@ -70,7 +65,7 @@ int32_t	i;
 	this	-> nrBlocks		= params. get_L ();
 	this	-> carriers		= params. get_carriers ();
 	this	-> carrierDiff		= params. get_carrierDiff ();
-
+	this	-> giveSignal		= false;
 
 	ofdmBuffer. resize (2 * T_s);
 	ofdmBufferIndex			= 0;
@@ -79,16 +74,7 @@ int32_t	i;
 	fineCorrector			= 0;	
 	f2Correction			= true;
 	attempts			= 0;
-	scanMode			= false;
-	connect (this, SIGNAL (setSynced (char)),
-	         myRadioInterface, SLOT (setSynced (char)));
-	connect (this, SIGNAL (No_Signal_Found (void)),
-	         myRadioInterface, SLOT (No_Signal_Found(void)));
-	connect (this, SIGNAL (setSyncLost (void)),
-	         myRadioInterface, SLOT (setSyncLost (void)));
-	
 	myReader. setRunning  (false);
-//	the thread will be started from somewhere else
 }
 
 	dabProcessor::~dabProcessor	(void) {
@@ -98,11 +84,18 @@ int32_t	i;
 	                        	// through the getSample(s) functions.
 	   msleep (100);
 	   while (isRunning ()) {
-	      usleep (100);
+	      usleep (1000);
 	   }
 	}
 }
 
+void	dabProcessor::start (int frequency, bool giveSignal) {
+	theDevice	-> restartReader ();
+	theDevice	-> setVFOFrequency (frequency);
+	this		-> giveSignal = giveSignal;
+	this -> QThread::start ();
+}
+	
 /***
    *	\brief run
    *	The main thread, reading samples,
@@ -128,8 +121,9 @@ float		envBuffer	[syncBufferSize];
         f2Correction    = true;
         syncBufferIndex = 0;
 	attempts	= 0;
-        theRig  -> resetBuffer ();
-	coarseOffset	= theRig -> getOffset ();
+        theDevice  -> resetBuffer ();
+	theDevice	-> restartReader ();
+	coarseOffset	= 0;
 	myReader. setRunning (true);
 	my_ofdmDecoder. start ();
 //
@@ -169,11 +163,10 @@ SyncOnNull:
 	      syncBufferIndex = (syncBufferIndex + 1) & syncBufferMask;
 	      counter ++;
 	      if (counter > T_F) { // hopeless
-	         if (scanMode && (++ attempts >= 5)) {
+	         if (giveSignal && (++ attempts >= 5)) {
 	            emit (No_Signal_Found ());
                     attempts = 0;
                  }
-
 	         goto notSynced;
 	      }
 	   }
@@ -326,9 +319,10 @@ ReadyForNewFrame:
 	   goto SyncOnPhase;
 	}
 	catch (int e) {
-	   fprintf (stderr, "dabProcessor is stopping\n");
+//	   fprintf (stderr, "dabProcessor is stopping\n");
 	   ;
 	}
+	theDevice	-> stopReader ();
 	my_ofdmDecoder. stop ();
 	my_mscHandler.  stop ();
 	my_ficHandler.  stop ();
@@ -336,23 +330,25 @@ ReadyForNewFrame:
 
 void	dabProcessor:: reset	(void) {
 	myReader. setRunning (false);
+	theDevice	-> stopReader ();
 	while (isRunning ())
-	   wait ();
+	   usleep (1000);
 	usleep (10000);
 	my_ofdmDecoder. stop ();
 	my_mscHandler.  reset ();
 	my_ficHandler.  reset ();
-	start ();
+	QThread::start ();
 }
 
 void	dabProcessor::stop	(void) {
 	myReader. setRunning (false);
 	while (isRunning ())
-	   wait ();
+	   usleep (1000);
 	usleep (10000);
 	my_ofdmDecoder. stop ();
 	my_mscHandler.  reset ();
 	my_ficHandler.  reset ();
+	theDevice	-> stopReader ();
 }
 
 void	dabProcessor::coarseCorrectorOn (void) {
@@ -362,15 +358,9 @@ void	dabProcessor::coarseCorrectorOn (void) {
 
 void	dabProcessor::coarseCorrectorOff (void) {
 	f2Correction	= false;
-	theRig	-> setOffset (coarseOffset);
 }
 
-void	dabProcessor::set_scanMode	(bool b) {
-	scanMode	= b;
-	attempts	= 0;
-}
-
-//	we could have derive the dab processor from fic and msc handlers,
+//	we could have derived the dab processor from fic and msc handlers,
 //	however, from a logical point of view they are more delegates than
 //	parents.
 uint8_t dabProcessor::kindofService           (QString &s) {
@@ -409,17 +399,22 @@ void	dabProcessor::reset_msc (void) {
 }
 
 void	dabProcessor::set_audioChannel (audiodata *d,
-	                                      RingBuffer<int16_t> *b) {
+	                                RingBuffer<int16_t> *b,
+	                                RingBuffer<uint8_t> *db) {
 	my_mscHandler. set_audioChannel (d, b);
+	for (int i = 1; i < 10; i ++) {
+           packetdata pd;
+           dataforDataService (d -> serviceName, &pd, i);
+           if (pd. defined) {
+              set_dataChannel (&pd, db);
+              break;
+           }
+        }
 }
 
 void	dabProcessor::set_dataChannel (packetdata *d,
 	                                      RingBuffer<uint8_t> *b) {
 	my_mscHandler. set_dataChannel (d, b);
-}
-
-int32_t dabProcessor::get_ensembleId	(void) {
-	return my_ficHandler. get_ensembleId ();
 }
 
 QString dabProcessor::get_ensembleName	(void) {
@@ -430,4 +425,3 @@ void	dabProcessor::clearEnsemble	(void) {
 	my_ficHandler. clearEnsemble ();
 }
 
-	

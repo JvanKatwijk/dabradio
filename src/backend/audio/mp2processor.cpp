@@ -380,8 +380,8 @@ int32_t sb, ch, gr, part, idx, nch, i, j, sum;
 int32_t table_idx;
 
 	numberofFrames ++;
-	if (numberofFrames >= 25) {
-	   show_frameErrors (errorFrames);
+	if (numberofFrames >= 100) {
+	   show_frameErrors (100 - errorFrames);
 	   numberofFrames	= 0;
 	   errorFrames		= 0;
 	}

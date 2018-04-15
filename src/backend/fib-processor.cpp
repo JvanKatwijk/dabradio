@@ -1237,7 +1237,15 @@ int16_t i;
 	}
 	return -1;
 }
-//
+
+static
+bool	match (QString s1, QString s2) {
+	if (s1 == s2)
+	   return true;
+	if (s1. startsWith (s2) || s2. startsWith (s1))
+	   return true;
+	return false;
+}
 //
 //	Note that here we only look for the main service
 uint8_t	fib_processor::kindofService (QString &s) {
@@ -1254,7 +1262,7 @@ int16_t	service		= UNKNOWN_SERVICE;
 	   if (!listofServices [i]. serviceLabel. hasName)
 	      continue;
 
-	   if (listofServices [i]. serviceLabel. label != s)
+	   if (!match (s, listofServices [i]. serviceLabel. label))
 	      continue;
 
 	   selectedService = listofServices [i]. serviceId;

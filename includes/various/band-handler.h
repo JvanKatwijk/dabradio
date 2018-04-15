@@ -30,10 +30,15 @@
 //
 class bandHandler {
 public:
-	bandHandler	(void);
+	bandHandler	(const QString &);
 	~bandHandler	(void);
 void	setupChannels	(QComboBox *s, uint8_t band);
-int32_t Frequency	(uint8_t band, QString Channel);
+int32_t Frequency	(QString Channel);
+int32_t Frequency	(int channelNumber);
+QString	channel		(int channelNumber);
+int	channels	(void);
+private:
+	uint8_t		dabBand;
 };
 #endif
 
