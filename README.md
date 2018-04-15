@@ -103,7 +103,7 @@ the RPI 2/3 running under Stretch, THE FOLLOWING COMMANDS ARE IN A SCRIPT: build
    sudo apt-get install qt5-qmake build-essential g++ git cmake
    sudo apt-get install libsndfile1-dev qt5-default libfftw3-dev portaudio19-dev 
    sudo apt-get install libfaad-dev zlib1g-dev rtl-sdr libusb-1.0-0-dev mesa-common-dev
-   sudo apt-get install libgl1-mesa-dev libqt5opengl5-dev libsamplerate0-dev libqwt-qt5-dev
+   sudo apt-get install libgl1-mesa-dev libqt5opengl5-dev libsamplerate0-dev 
    sudo apt-get install qtbase5-dev
 
    ```
@@ -177,6 +177,27 @@ CONFIG          += airspy
 ```
 
 Audio samples are sent to an audio device using the portaudio library.
+
+If you are compiling/running for an x64 based PC with SSE, then
+you could set
+```
+#CONFIG          += NEON
+CONFIG          += SSE
+#CONFIG          += NO_SSE
+```
+
+If you are compiling/running for an RPI2/3, then you could set
+```
+CONFIG          += NEON
+#CONFIG          += SSE
+#CONFIG          += NO_SSE
+```
+Further in the ".pro" file, in the section labeled NEON, you could
+choose between compiler flags set for optimizing for the RPI2 or the RPI3
+by commenting (or uncommenting) some lines
+
+The default setting in the ".pro" file is NO_SSE, as is the case in
+the CMakeLists.txt file.
 
 ------------------------------------------------------------------
 Configuring using CMake
