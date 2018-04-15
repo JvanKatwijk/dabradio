@@ -214,7 +214,6 @@ void	RadioInterface:: startScanning (void) {
 	   channelNumber ++;
 	}
 
-<<<<<<< HEAD
 	if (channelNumber >= theBand -> channels ()) {
 	   set_ensembleName ("end of scan");
 	   serviceLabel -> setText ("No services found, retry scan");
@@ -228,9 +227,6 @@ void	RadioInterface:: startScanning (void) {
 	            this, SLOT (selectService (const QString &, const QString &)));
 	   connect (resetButton, SIGNAL (clicked (void)),
 	            this, SLOT (reset (void)));
-=======
-	if (channelNumber >= channels)
->>>>>>> b28f97e0af591cbf2edbb52c14786696bc886f1d
 	   return;
 	}
 //
