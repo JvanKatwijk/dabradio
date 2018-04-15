@@ -133,8 +133,9 @@ int32_t	bandHandler::Frequency (int channelNumber) {
 }
 
 QString	bandHandler::channel	(int channelNumber) {
-	if (dabBand == BAND_III)
+	if (dabBand == BAND_III) {
 	   return bandIII_frequencies [channelNumber]. key;
+	}
 	else
 	   return Lband_frequencies [channelNumber]. key;
 }
@@ -148,9 +149,6 @@ struct dabFrequencies	*finger;
 	else
 	   finger = Lband_frequencies;
 
-	for (i = 0; finger [i]. key != NULL; i ++) {
-	   if (finger [i]. fKHz == 0) {
-	      return i;
-	   }
-	}
+	for (i = 0; finger [i]. key != NULL; i ++);
+	return i;
 }

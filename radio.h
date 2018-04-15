@@ -126,6 +126,7 @@ private:
 	int16_t		threshold;
 	int16_t		diff_length;
 	bandHandler	*theBand;
+	int		channels;
 	std::atomic<bool>	running;
 	bool		scanning;
 	virtualInput	*inputDevice;

@@ -1,7 +1,6 @@
 # dabradio [![Build Status](https://travis-ci.org/JvanKatwijk/dabradio.svg?branch=master)](https://travis-ci.org/JvanKatwijk/dabradio)
 
-dabradio is a Software for Windows, Linux and Raspberry Pi for listening to terrestrial Digital Audio Broadcasting (DAB and DAB+). It is the little brother of Qt-DAB, the successor of both DAB-rpi and sdr-j-DAB, two former programs by the same author.
-
+dabradio is a Software for Windows, Linux and Raspberry Pi for listening to terrestrial Digital Audio Broadcasting (DAB and DAB+). It is the little brother of Qt-DAB.
 ------------------------------------------------------------------
 Table of Contents
 ------------------------------------------------------------------
@@ -10,7 +9,7 @@ Table of Contents
 * [Features](#features)
 * [Installation](#features)
   * [Windows](#windows)
-  * [Ubuntu Linux](#ubuntu-linux)
+  * [Linux: Ubuntu/x64 and Stretch RPI2/3](#ubuntu-linux)
   	- [Configuring using the dabradio.pro file](#configuring-using-the-dabradio-file)
    	- [Configuring using CMake](#configuring-using-cmake)
    	- [Qt](#qt)
@@ -92,7 +91,8 @@ If you are not familar with compiling then please continue reading by jumping to
 
 Ubuntu 16.04 (and on) as well as Debian/Stretch on the RPI2 and 3 have good support for Qt5 (note that contrary to Qt-DAB
 no use is made of the qwt library). 
-For generating an executable under Ubuntu (16.04 or newer) or on the RPI 2/3 running under Stretch, you can put the following commands into a script. 
+For generating an executable under Ubuntu (16.04 or newer) or on
+the RPI 2/3 running under Stretch, THE FOLLOWING COMMANDS ARE IN A SCRIPT: build-script. It was tested on RPI2/3 running stretch. 
 (For Ubuntu 14.04 look into the package manager for Qt4 packages).
 
 1. Fetch the required components
