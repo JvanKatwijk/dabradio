@@ -182,6 +182,7 @@ endif ()
 	     ${${objectName}_SRCS}
 	     ./main.cpp
 	     ./dab-processor.cpp
+	     ./service-list.cpp
 	     ./service-display.cpp
              ./src/ofdm/sample-reader.cpp
 	     ./src/ofdm/ofdm-decoder.cpp
@@ -231,6 +232,7 @@ endif ()
 
 	set (${objectName}_MOCS
 	     ./dab-processor.h
+	     ./service-list.h
 	     ./service-display.h
 	     ./includes/output/audio-base.h
 	     ./includes/ofdm/sample-reader.h
