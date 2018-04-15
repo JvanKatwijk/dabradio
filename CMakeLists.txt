@@ -139,6 +139,7 @@ endif ()
 	set (${objectName}_HDRS
 	     ./dab-processor.h
 	     ./service-list.h
+	     ./service-display.h
              ./includes/ofdm/sample-reader.h
 	     ./includes/dab-constants.h
 	     ./includes/ofdm/phasereference.h
@@ -181,7 +182,7 @@ endif ()
 	     ${${objectName}_SRCS}
 	     ./main.cpp
 	     ./dab-processor.cpp
-	     ./service-list.cpp
+	     ./service-display.cpp
              ./src/ofdm/sample-reader.cpp
 	     ./src/ofdm/ofdm-decoder.cpp
 	     ./src/ofdm/phasereference.cpp
@@ -230,7 +231,7 @@ endif ()
 
 	set (${objectName}_MOCS
 	     ./dab-processor.h
-	     ./service-list.h
+	     ./service-display.h
 	     ./includes/output/audio-base.h
 	     ./includes/ofdm/sample-reader.h
 	     ./includes/ofdm/ofdm-decoder.h
