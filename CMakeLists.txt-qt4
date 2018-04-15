@@ -225,6 +225,7 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
 
 	set (${objectName}_MOCS
 	     ./dab-processor.h
+	     ./service-list.h
 	     ./service-display.h
              ./includes/output/audio-base.h
              ./includes/ofdm/sample-reader.h
