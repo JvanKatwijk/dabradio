@@ -179,6 +179,7 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
 	     ${${objectName}_SRCS}
 	     ./main.cpp
 	     ./dab-processor.cpp
+	     ./service-list.cpp
 	     ./service-display.cpp
              ./src/ofdm/sample-reader.cpp
 	     ./src/ofdm/ofdm-decoder.cpp

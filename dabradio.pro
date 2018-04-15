@@ -211,7 +211,8 @@ DEFINES		+= PRESET_NAME
 
 #and these one is just experimental,
 #CONFIG	+= NEON
-CONFIG	+= SSE
+#CONFIG	+= SSE
+CONFIG	+= NO_SSE
 }
 #
 # an attempt to have it run under W32 through cross compilation
@@ -325,8 +326,12 @@ qt-audio	{
 
 NEON	{
 	DEFINES		+= NEON_AVAILABLE
-	QMAKE_CFLAGS	+=  -mfpu=neon-vfpv4
-	QMAKE_CXXFLAGS	+=  -mfpu=neon-vfpv4
+# for RPI2 use:
+	QMAKE_CFLAGS	+=  -mcpu=cortex-a7 -mfloat-abi=hard -mfpu=neon-vfpv4  
+	QMAKE_CXXFLAGS	+=  -mcpu=cortex-a7 -mfloat-abi=hard -mfpu=neon-vfpv4  
+# for RPI3 use:
+#	QMAKE_CFLAGS	+=  -mcpu=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8 -mneon-for-64bits
+#	QMAKE_CXXFLAGS	+=  -mcpu=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8 -mneon-for-64bits
 	HEADERS		+= ./src/backend/viterbi_768/spiral-neon.h
 	SOURCES		+= ./src/backend/viterbi_768/spiral-neon.c
 }
