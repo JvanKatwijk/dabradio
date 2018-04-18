@@ -266,13 +266,17 @@ For the CMakeLists.txt file, uncomment
 appImages for x64 Linux systems and RPI2/3
 ---------------------------------------------------------------------------
 
-https://github.com/JvanKatwijk/dabradio/releases contains a generated appImage, Qt_DAB-ARM.Appimage, which is created on Ubuntu 14.04 (Trusty), and uses Qt4 (so it basically should run on any x-64 based linux system that isn't too old.). It assumes that you have installed a device, either a dabstick (i.e. rtlsdr), an Airspy or a SDRplay. All further dependencies are included. There is only one file which you have to make executable in order to run.
+https://github.com/JvanKatwijk/dabradio/releases contains a generated appImage, dabradio-x64.Appimage, which is created on Ubuntu 14.04 (Trusty), and uses Qt4 (so it basically should run on any x-64 based linux system that isn't too old.).
+It assumes that you have installed an appropriate usb library,
+libraries to support either a dabstick (i.e. rtlsdr) or an Airspy are
+included in the appImage (the appropriate udev rules, i.e. rules to
+allow a non-root user to use the device through USB, will be installed
+by the execution of the appImage, that is why it will ask for your password. If you have installed the device of your choice, you can just cancel this request).
+If you want to run
+with an SDRplay, follow the installation instructions for the library from 
+"www.sdrplay.com". All further dependencies are included.
+The appImage is just a self-contained single file which you have to make executable in order to run.
 It furthermore contains an -experimental- appImage for use under Stretch on an RPI2/3, dabradio-ARM.AppImage.
-The same applies here, it assumes an installed device.
-
-Libraries for the dabstick (i.e. rtlsdr) and airspy are part of the appImage. Note that the library for the sdrplay device should be installed from the supplier, i.e. "www.sdrplay.com".
-
-All further dependencies are included
 
 For more information see http://appimage.org/
 
