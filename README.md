@@ -186,12 +186,25 @@ CONFIG          += SSE
 #CONFIG          += NO_SSE
 ```
 
-If you are compiling/running for an RPI2/3, then you could set
+If you are compiling/running for an RPI2/3, and want to whether pr
+not NEON instructions can be used, you could experiment with
 ```
 CONFIG          += NEON
 #CONFIG          += SSE
 #CONFIG          += NO_SSE
 ```
+
+The safest way - always - is to set
+```
+#CONFIG          += NEON
+#CONFIG          += SSE
+CONFIG          += NO_SSE
+```
+
+Slightly slower since no the other two use specialized instructions
+in the viterbi decoding (which is quite heavy in DAB decoding)
+
+
 Further in the ".pro" file, in the section labeled NEON, you could
 choose between compiler flags set for optimizing for the RPI2 or the RPI3
 by commenting (or uncommenting) some lines
