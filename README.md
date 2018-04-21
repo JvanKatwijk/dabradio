@@ -207,7 +207,8 @@ CONFIG          += NEON_RPI3
 
 The safest way - always - is to set
 ```
-#CONFIG          += NEON
+#CONFIG          += NEON_RPI2
+#CONFIG          += NEON_RPI3
 #CONFIG          += SSE
 CONFIG          += NO_SSE
 ```
