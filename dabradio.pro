@@ -210,7 +210,9 @@ DEFINES	+= __THREADED_BACKEND
 DEFINES		+= PRESET_NAME
 
 #and these one is just experimental,
-#CONFIG	+= NEON
+#NO_SSE is always safe
+#CONFIG	+= NEON_RPI2
+#CONFIG	+= NEON_RPI3
 #CONFIG	+= SSE
 CONFIG	+= NO_SSE
 }
@@ -324,12 +326,18 @@ qt-audio	{
 	                   ./src/output/Qt-audiodevice.cpp
 }
 
-NEON	{
-	DEFINES		+= NEON_AVAILABLE
 # for RPI2 use:
+NEON_RPI2	{
+	DEFINES		+= NEON_AVAILABLE
 	QMAKE_CFLAGS	+=  -mcpu=cortex-a7 -mfloat-abi=hard -mfpu=neon-vfpv4  
 	QMAKE_CXXFLAGS	+=  -mcpu=cortex-a7 -mfloat-abi=hard -mfpu=neon-vfpv4  
+	HEADERS		+= ./src/backend/viterbi_768/spiral-neon.h
+	SOURCES		+= ./src/backend/viterbi_768/spiral-neon.c
+}
+
 # for RPI3 use:
+NEON_RPI3	{
+	DEFINES		+= NEON_AVAILABLE
 #	QMAKE_CFLAGS	+=  -mcpu=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8 -mneon-for-64bits
 #	QMAKE_CXXFLAGS	+=  -mcpu=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8 -mneon-for-64bits
 	HEADERS		+= ./src/backend/viterbi_768/spiral-neon.h

@@ -181,15 +181,26 @@ Audio samples are sent to an audio device using the portaudio library.
 If you are compiling/running for an x64 based PC with SSE, then
 you could set
 ```
-#CONFIG          += NEON
+#CONFIG          += NEON_RPI2
+#CONFIG          += NEON_RPI3
 CONFIG          += SSE
 #CONFIG          += NO_SSE
 ```
 
-If you are compiling/running for an RPI2/3, and want to whether pr
-not NEON instructions can be used, you could experiment with
+If you are compiling/running for an RPI2, and want to check whether or
+not NEON instructions can be used, you could set
 ```
-CONFIG          += NEON
+CONFIG          += NEON_RPI2
+#CONFIG          += NEON_RPI3
+#CONFIG          += SSE
+#CONFIG          += NO_SSE
+```
+
+If you are compiling/running for an RPI3, and want to check whether or
+not NEON instructions can be used, you could set
+```
+#CONFIG          += NEON_RPI2
+CONFIG          += NEON_RPI3
 #CONFIG          += SSE
 #CONFIG          += NO_SSE
 ```
