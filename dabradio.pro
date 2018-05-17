@@ -194,7 +194,7 @@ LIBS		+= -lfaad
 CONFIG		+= dabstick
 CONFIG		+= sdrplay
 CONFIG		+= airspy
-CONFIG		+= hackrf
+#CONFIG		+= hackrf	# does not work - yet
 #if you want to listen remote, uncomment
 #CONFIG		+= tcp-streamer		# use for remote listening
 #otherwise, if you want to use the default qt way of soud out
