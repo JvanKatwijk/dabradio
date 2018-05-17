@@ -40,6 +40,9 @@
 #ifdef	HAVE_AIRSPY
 #include	"airspy-handler.h"
 #endif
+#ifdef	HAVE_HACKRF
+#include	"hackrf-handler.h"
+#endif
 #define DEFAULT_INI     ".dabradio.ini"
 #define	SERVICE_LIST	".dabradio-stations.bin"
 
@@ -183,6 +186,12 @@ int	gain;
 #ifdef	HAVE_RTLSDR
 	try {
 	   inputDevice	= new rtlsdrHandler (dabSettings);
+	   return inputDevice;
+	} catch (int e) {}
+#endif
+#ifdef	HAVE_HACKRF
+	try {
+	   inputDevice	= new hackrfHandler (dabSettings);
 	   return inputDevice;
 	} catch (int e) {}
 #endif

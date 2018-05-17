@@ -37,8 +37,8 @@
 	            QStringList () << tr ("station") << tr ("channel") << tr ("bitrate") << tr ("program type"));
 	connect (tableWidget, SIGNAL (cellClicked (int, int)),
 	         this, SLOT (tableSelect (int, int)));
-	connect (tableWidget, SIGNAL (cellDoubleClicked (int, int)),
-	         this, SLOT (removeRow (int, int)));
+//	connect (tableWidget, SIGNAL (cellDoubleClicked (int, int)),
+//	         this, SLOT (removeRow (int, int)));
 //	loadTable ();
 }
 

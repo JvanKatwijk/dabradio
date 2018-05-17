@@ -194,7 +194,7 @@ LIBS		+= -lfaad
 CONFIG		+= dabstick
 CONFIG		+= sdrplay
 CONFIG		+= airspy
-
+CONFIG		+= hackrf
 #if you want to listen remote, uncomment
 #CONFIG		+= tcp-streamer		# use for remote listening
 #otherwise, if you want to use the default qt way of soud out
@@ -306,6 +306,19 @@ airspy {
 	SOURCES		+= ./devices/airspy-handler/airspy-handler.cpp \
 	                   ./devices/airspy-handler/airspyfilter.cpp
 }
+#
+#       the HACKRF One
+#
+hackrf {
+        DEFINES         += HAVE_HACKRF
+        DEPENDPATH      += ./devices/hackrf-handler
+        INCLUDEPATH     += ./devices/hackrf-handler
+        HEADERS         += ./devices/hackrf-handler/hackrf-handler.h
+        SOURCES         += ./devices/hackrf-handler/hackrf-handler.cpp
+        FORMS           += ./devices/hackrf-handler/hackrf-widget.ui
+        LIBS            += -lhackrf
+}
+#
 
 #
 rtl_tcp {
