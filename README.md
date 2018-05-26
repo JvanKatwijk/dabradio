@@ -35,26 +35,28 @@ maintain a GitHub repository for both of them.
 
 The Qt-free version, the "command line only" version, is named dab-cmdline, and is built around a library that does the DAB decoding. It has its own repository on Github.
 
-Next to these C++ based versions, a version in Java is being developed, it has its own repository on Github and a GUI that is similar to the one for
+Next to these C++ based versions, a version in Java was developed, it has its own repository on Github and a GUI that is similar to the one for
 **dabradio**.
 
 A new feature is that
 rather than selecting a channel, the software maintains a list of
-channels that can be received. The list is maintained
+channels that can be received. This list is maintained
 between program invocations,
 on program start up, these channels are scanned for services.
+Of course, the first time the program is started (or on a reset),
+all channels in the given band are listened to to see whether or not
+a DAB signal can be detected. If so, the channel is recorded.
 
 The GUI does not provide buttons to select the Mode or the Band. Defaults are Mode 1 and the VHF Band III. In the ".ini" file
 (a file .dabradio.ini in the home directory of the user) the Mode can be set as well as the band.
 
-The first time the program is started, all channels are scanned,
-as is the case whenever the "reset" button is touched.
-
 The services are presented in a separate widget, for each service the
 widget contains some additional information.
 
-Device selection is automated, if a device is connected, the software
-will detect that and connect to that device. If more than one
+**Device selection** is automated, if a device - which is part of
+the configuration - is connected, the software
+will detect that and connect to that device on program start-up.
+If more than one
 device is connected, one will be selected.
 
 ------------------------------------------------------------------------
@@ -73,8 +75,10 @@ all services)
   	- SDRplay (both RSP I and RSP II),
   	- Airspy, including Airspy mini,
    	- SDR DAB sticks (RTL2838U or similar), and
- 
-Data services are not visible to the use, although data as subservice are - limited - implemented.
+	- HACKRF one.
+
+Data services are not visible to the user,
+although MOT as subservice is - limited - implemented.
 
 ------------------------------------------------------------------
 Windows
@@ -174,8 +178,8 @@ Comment the lines out by prefixing the line with a `#` in the `qt-dab.pro` file 
 CONFIG          += dabstick
 CONFIG          += sdrplay
 CONFIG          += airspy
+CONFIG          += hackrf
 ```
-
 Audio samples are sent to an audio device using the portaudio library.
 
 If you are compiling/running for an x64 based PC with SSE, then
@@ -250,6 +254,15 @@ SDRplay
 
 The current set of sources provides support for the RSP-I and the RSP-II and
 the new RSP-1a, it is assumed that at least library version 2.09 is installed.
+
+-----------------------------------------------------------------
+HACKRF one
+-----------------------------------------------------------------
+
+The current set of sources provides support for the HACKRF One. It
+is assumed that a library is installed. Since support for HACKRF One
+is still slightly experimental, it can only be configured using the
+qmake/make installation route.
 
 ------------------------------------------------------------------
 Qt

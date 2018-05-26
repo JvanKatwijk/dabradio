@@ -89,8 +89,9 @@ HEADERS += ./radio.h \
 	   ./includes/backend/data/data-processor.h \
 	   ./includes/backend/data/pad-handler.h \
 	   ./includes/backend/data/virtual-datahandler.h \
-	   ./includes/backend/data/mot-databuilder.h \
-	   ./includes/backend/data/mot-data.h \
+	   ./includes/backend/data/mot-handler.h \
+	   ./includes/backend/data/mot-dir.h \
+	   ./includes/backend/data/mot-object.h \
 	   ./includes/backend/protection.h \
 	   ./includes/backend/eep-protection.h \
 	   ./includes/backend/uep-protection.h \
@@ -144,8 +145,9 @@ SOURCES += ./main.cpp \
 	   ./src/backend/data/pad-handler.cpp \
 	   ./src/backend/data/data-processor.cpp \
 	   ./src/backend/data/virtual-datahandler.cpp \
-	   ./src/backend/data/mot-databuilder.cpp \
-	   ./src/backend/data/mot-data.cpp \
+	   ./src/backend/data/mot-handler.cpp \
+	   ./src/backend/data/mot-dir.cpp \
+	   ./src/backend/data/mot-object.cpp \
 #	   ./src/output/fir-filters.cpp \
 	   ./src/output/audio-base.cpp \
 	   ./src/output/newconverter.cpp \

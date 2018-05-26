@@ -23,7 +23,7 @@
 #include	<cstring>
 #include	"radio.h"
 #include	"charsets.h"
-#include	"mot-data.h"
+#include	"mot-object.h"
 /**
   *	\class padHandler
   *	Handles the pad segments passed on from mp2- and mp4Processor
@@ -34,7 +34,8 @@
 	         mr, SLOT (showLabel (QString)));
 	connect (this, SIGNAL (show_motHandling (bool)),
 	         mr, SLOT (show_motHandling (bool)));
-	my_motHandler	= new motHandler (mr, picturesPath);
+	this	-> picturePath	= picturesPath;
+	currentSlide	= NULL;
 //
 //	mscGroupElement indicates whether we are handling an
 //	msc datagroup or not.
@@ -53,7 +54,8 @@
 }
 
 	padHandler::~padHandler	(void) {
-	delete my_motHandler;
+	if (currentSlide != NULL)
+	   delete currentSlide;
 }
 
 //	Data is stored reverse, we pass the vector and the index of the
@@ -105,8 +107,6 @@ int16_t	i;
 	   lastSegment   = (b [last - 1] & 0x20) != 0;
 	   charSet       = b [last - 2] & 0x0F;
 	   uint8_t AcTy  = CI & 037;	// application type
-//	   fprintf (stderr, "type %d, firstS %d, lastS %d\n",
-//	                         AcTy, firstSegment, lastSegment);
 	   switch (AcTy) {
 	      default:
 	         break;
@@ -364,7 +364,7 @@ int16_t	i;
 int16_t	currentLength = msc_dataGroupBuffer. size ();
 //
 //	just to ensure that, when a "12" appType is missing, the
-//	data of "13" appType elements is not  endless collected.
+//	data of "13" appType elements is not endlessly collected.
 	if (currentLength == 0)
 	   return;
 
@@ -390,14 +390,13 @@ int16_t	size	= data. size ();
 	uint8_t		continuityIndex = (data [1] & 0xF0) >> 4;
 	uint8_t		repetitionIndex =  data [1] & 0xF;
 	int16_t		segmentNumber	= -1;		// default
-	int16_t		transportId	= -1;		// default
+	uint16_t	transportId	= 0;	// default
 	bool		lastFlag	= false;	// default
 	uint16_t	index;
 
 	if ((data [0] & 0x40) != 0) {
 	   bool res	= check_crc_bytes (data. data (), msc_length - 2);
 	   if (!res) {
-//	      fprintf (stderr, "crc failed ");
 	      return;
 	   }
 //	   else
@@ -434,12 +433,49 @@ int16_t	size	= data. size ();
 	   index += (lengthIndicator - 2);
 	}
 
-//	the segment is handled by the mot handler, which also
-//	handles the MOT's from the regular data services
-	my_motHandler	-> process_mscGroup (&data [index],
-	                                     groupType,
-	                                     lastFlag,
-	                                     segmentNumber,
-	                                     transportId);
+
+	uint32_t segmentSize	= ((data [index + 0] & 0x1F) << 8) |
+	                            data [index + 1];
+//
+//	handling MOT in the PAD, we only deal here with type 3/4
+	switch (groupType) {
+	   case 3:
+	      if (currentSlide == NULL) {
+	         currentSlide	= new motObject (myRadioInterface,
+	                                         picturePath,
+	                                         false,
+	   	                                 transportId,
+	                                         &data [index + 2],
+	                                         segmentSize,
+	                                         lastFlag);
+	      }
+	      else {
+	         if (currentSlide -> get_transportId () == transportId)
+	            break;
+
+	         delete currentSlide;
+	         currentSlide	= new motObject (myRadioInterface,
+	                                         picturePath,
+	                                         false,
+	   	                                 transportId,
+	                                         &data [index + 2],
+	                                         segmentSize,
+	                                         lastFlag);
+	      }
+	      break;
+
+	   case 4:
+	      if (currentSlide == NULL)
+	         break;		// no header yet
+	      if (currentSlide -> get_transportId () == transportId)
+	         currentSlide -> addBodySegment (&data [index + 2],
+	                                         segmentNumber,
+	                                         segmentSize,
+	                                         lastFlag);
+	      break;
+
+	   default:		// cannot happen
+	      break;
+	}
 }
 

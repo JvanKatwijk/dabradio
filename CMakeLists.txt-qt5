@@ -161,10 +161,11 @@ endif ()
 	     ./includes/backend/audio/faad-decoder.h
 	     ./includes/backend/audio/mp4processor.h
 	     ./includes/backend/audio/mp2processor.h
-	     ./includes/backend/data/mot-databuilder.h
 	     ./includes/backend/data/virtual-datahandler.h
 	     ./includes/backend/data/pad-handler.h
-	     ./includes/backend/data/mot-data.h
+	     ./includes/backend/data/mot-handler.h
+	     ./includes/backend/data/mot-dir.h
+	     ./includes/backend/data/mot-object.h
 	     ./includes/backend/data/data-processor.h
 	     ./devices/virtual-input.h
 	     ./includes/output/fir-filters.h
@@ -209,10 +210,11 @@ endif ()
 	     ./src/backend/audio/faad-decoder.cpp
 	     ./src/backend/audio/mp4processor.cpp
 	     ./src/backend/audio/mp2processor.cpp
-	     ./src/backend/data/mot-databuilder.cpp
 	     ./src/backend/data/virtual-datahandler.cpp
 	     ./src/backend/data/pad-handler.cpp
-	     ./src/backend/data/mot-data.cpp
+	     ./src/backend/data/mot-handler.cpp
+	     ./src/backend/data/mot-dir.cpp
+	     ./src/backend/data/mot-object.cpp
 	     ./src/backend/data/data-processor.cpp
 	     ./devices/virtual-input.cpp
 	     ./devices/rawfiles/rawfiles.cpp
@@ -246,8 +248,9 @@ endif ()
 	     ./includes/backend/audio/mp4processor.h
 	     ./includes/backend/data/virtual-datahandler.h
 	     ./includes/backend/data/pad-handler.h
-	     ./includes/backend/data/mot-data.h
-	     ./includes/backend/data/mot-databuilder.h
+	     ./includes/backend/data/mot-handler.h
+	     ./includes/backend/data/mot-dir.h
+	     ./includes/backend/data/mot-object.h
 	     ./includes/backend/data/data-processor.h
 	)
 
