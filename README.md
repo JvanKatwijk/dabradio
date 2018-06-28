@@ -84,7 +84,8 @@ although MOT as subservice is - limited - implemented.
 Windows
 ------------------------------------------------------------------
 
-Windows releases can be found at https://github.com/JvanKatwijk/dabradio/releases . Please copy them into the same directory you've unzipped http://www.sdr-j.tk/windows-bin.zip as it uses the same libraries.
+Windows releases can be found at https://github.com/JvanKatwijk/dabradio/releases. The zipped folder found there contains
+the executable for this and some other windows prohgrams, as well as the libraries required. 
 
 If you want to compile it by yourself, please install Qt
 through its online installer, see https://www.qt.io/ 
