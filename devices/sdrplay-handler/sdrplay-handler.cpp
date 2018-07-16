@@ -97,8 +97,8 @@ ULONG APIkeyValue_length = 255;
 	}
 
 	err		= my_mir_sdr_ApiVersion (&ver);
-	if (ver < 2.05) {
-	   fprintf (stderr, "sorry, library too old\n");
+	if (ver < 2.13) {
+	   fprintf (stderr, "please install mir_sdr library >= 2.13\n");
 #ifdef __MINGW32__
            FreeLibrary (Handle);
 #else
@@ -242,12 +242,16 @@ void myStreamCallback (int16_t		*xi,
 	               int32_t		fsChanged,
 	               uint32_t		numSamples,
 	               uint32_t		reset,
+	               uint32_t		hwRemoved,
 	               void		*cbContext) {
 int16_t	i;
 sdrplayHandler	*p	= static_cast<sdrplayHandler *> (cbContext);
 float	denominator	= p -> denominator;
 std::complex<float> *localBuf =
 	   (std::complex<float> *)alloca (numSamples * sizeof (std::complex<float>));
+
+	if (reset || hwRemoved)
+	   return;
 
 	for (i = 0; i <  (int)numSamples; i ++)
 	   localBuf [i] = std::complex<float> (float (xi [i]) / denominator,

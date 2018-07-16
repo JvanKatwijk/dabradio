@@ -281,6 +281,7 @@ void	RadioInterface::nextChannel (void) {
 	            this, SLOT (reset (void)));
 	   return;
 	}
+
 	int tunedFrequency  =
               theBand -> Frequency (channelNumber);
 	QString text = "scanning ch ";
