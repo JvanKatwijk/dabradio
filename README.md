@@ -3,6 +3,8 @@
 
 dabradio is a Software for Windows, Linux and Raspberry Pi for listening to terrestrial Digital Audio Broadcasting (DAB and DAB+). It is the little brother of Qt-DAB.
 
+NEW: the software should be able to run with the mirics SDRplay-duo
+
 ------------------------------------------------------------------
 Table of Contents
 ------------------------------------------------------------------

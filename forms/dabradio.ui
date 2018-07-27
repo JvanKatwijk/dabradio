@@ -403,6 +403,9 @@
       <height>81</height>
      </rect>
     </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Gain setting. Different behaviour for different devices. For the SDRplay it is gain reduction.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
     <property name="orientation">
      <enum>Qt::Vertical</enum>
     </property>
