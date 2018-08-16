@@ -85,11 +85,8 @@ ULONG APIkeyValue_length = 255;
 #else
 	Handle		= dlopen ("libusb-1.0.so", RTLD_NOW | RTLD_GLOBAL);
 	Handle		= dlopen ("libmirsdrapi-rsp.so", RTLD_NOW);
-	if (Handle == NULL)
-	   Handle	= dlopen ("libmir_sdr.so", RTLD_NOW);
-
 	if (Handle == NULL) {
-	   fprintf (stderr, "error report %s\n", dlerror ());
+	   fprintf (stderr, "we could not load libmirsdrapi-rsp\nIf that is not the device you were expecting, do not worry\n", dlerror ());
 	   throw (23);
 	}
 #endif

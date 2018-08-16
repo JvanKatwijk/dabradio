@@ -287,8 +287,8 @@ Data_blocks:
 	   }
 
 NewOffset:
-///	we integrate the newly found frequency error with the
-///	existing frequency error.
+//	we integrate the newly found frequency error with the
+//	existing frequency error.
 	   fineCorrector += 0.1 * arg (FreqCorr) / (2 * M_PI) * carrierDiff;
 //
 /**

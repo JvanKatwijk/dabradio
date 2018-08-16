@@ -171,6 +171,14 @@ virtualInput	*setDevice (QSettings *dabSettings) {
 virtualInput	*inputDevice	= NULL;
 int	gain;
 ///	OK, everything quiet, now let us see what to do
+#ifdef	HAVE_AIRSPY
+	try {
+	   inputDevice	= new airspyHandler (dabSettings);
+	   return inputDevice;
+	} catch (int e) {
+	   fprintf (stderr, "failing to load airspy device\n");
+	}
+#endif
 #ifdef	HAVE_SDRPLAY
 	try {
 	   inputDevice	= new sdrplayHandler (dabSettings);
@@ -186,12 +194,6 @@ int	gain;
 #ifdef	HAVE_HACKRF
 	try {
 	   inputDevice	= new hackrfHandler (dabSettings);
-	   return inputDevice;
-	} catch (int e) {}
-#endif
-#ifdef	HAVE_AIRSPY
-	try {
-	   inputDevice	= new airspyHandler (dabSettings);
 	   return inputDevice;
 	} catch (int e) {}
 #endif

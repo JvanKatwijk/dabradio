@@ -104,7 +104,7 @@ int	i, k;
 #endif
 
 	if (Handle == NULL) {
-	   fprintf (stderr, "failed to open %s\n", libraryString);
+	   fprintf (stderr, "We could not open rtlsdr device\n if you are not waiting for that, do not worry\n");
 	   throw (20);
 	}
 
