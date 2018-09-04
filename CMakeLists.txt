@@ -123,14 +123,16 @@ endif ()
 	           ${QT_QTGUI_INCLUDE_DIR}
 	           .
 	           ./
+	           ./service-description
 	           ./includes
 	           ./includes/ofdm
 	           ./includes/backend
-	           ./includes/backend/viterbi_768
 	           ./includes/backend/audio
 	           ./includes/backend/data
 	           ./includes/backend/data/journaline
-	           ./includes/various
+	           ./includes/backend/data/mot
+	           ./includes/support
+	           ./includes/support/viterbi_768
 	           ./includes/output
 	           ./devices
 	           /usr/include/
@@ -138,14 +140,17 @@ endif ()
 
 	set (${objectName}_HDRS
 	     ./dab-processor.h
-	     ./service-list.h
-	     ./service-display.h
-             ./includes/ofdm/sample-reader.h
 	     ./includes/dab-constants.h
+	     ./service-description/service-descriptor.h 
+	     ./service-description/audio-descriptor.h 
+	     ./includes/country-codes.h 
+	     ./includes/ofdm/timesyncer.h 
+             ./includes/ofdm/sample-reader.h
 	     ./includes/ofdm/phasereference.h
 	     ./includes/ofdm/phasetable.h
 	     ./includes/ofdm/freq-interleaver.h
-	     ./includes/backend/viterbi_768/viterbi-768.h
+	     ./includes/ofdm/fic-handler.h 
+	     ./includes/ofdm/fib-processor.h  
 	     ./includes/backend/protection.h
 	     ./includes/backend/uep-protection.h
 	     ./includes/backend/eep-protection.h
@@ -163,40 +168,42 @@ endif ()
 	     ./includes/backend/audio/mp2processor.h
 	     ./includes/backend/data/virtual-datahandler.h
 	     ./includes/backend/data/pad-handler.h
-	     ./includes/backend/data/mot-handler.h
-	     ./includes/backend/data/mot-dir.h
-	     ./includes/backend/data/mot-object.h
+	     ./includes/backend/data/mot/mot-handler.h 
+	     ./includes/backend/data/mot/mot-object.h 
+	     ./includes/backend/data/mot/mot-dir.h 
 	     ./includes/backend/data/data-processor.h
 	     ./devices/virtual-input.h
 	     ./includes/output/fir-filters.h
 	     ./includes/output/audio-base.h
 	     ./includes/output/newconverter.h
-	     ./includes/various/fft-handler.h
-	     ./includes/various/ringbuffer.h
-	     ./includes/various/Xtan2.h
-	     ./includes/various/dab-params.h
-	     ./includes/various/band-handler.h
-	     ./includes/various/text-mapper.h
+	     ./includes/support/viterbi_768/viterbi-768.h
+	     ./includes/support/fft-handler.h
+	     ./includes/support/ringbuffer.h
+	     ./includes/support/Xtan2.h
+	     ./includes/support/dab-params.h
+	     ./includes/support/band-handler.h
+	     ./includes/support/text-mapper.h
+	     ./includes/support/dab_tables.h 
+
 	)
 
 	set (${objectName}_SRCS
 	     ${${objectName}_SRCS}
 	     ./main.cpp
 	     ./dab-processor.cpp
-	     ./service-list.cpp
-	     ./service-display.cpp
+	     ./service-description/service-descriptor.cpp 
+	     ./service-description/audio-descriptor.cpp 
+	     ./src/ofdm/timesyncer.cpp 
              ./src/ofdm/sample-reader.cpp
 	     ./src/ofdm/ofdm-decoder.cpp
 	     ./src/ofdm/phasereference.cpp
 	     ./src/ofdm/phasetable.cpp
 	     ./src/ofdm/freq-interleaver.cpp
-	     ./src/backend/viterbi_768/viterbi-768.cpp
-	     ./src/backend/viterbi_768/spiral-no-sse.c
-	     ./src/backend/fic-handler.cpp
+	     ./src/ofdm/fic-handler.cpp
+	     ./src/ofdm/fib-processor.cpp
 	     ./src/backend/protection.cpp
 	     ./src/backend/eep-protection.cpp
 	     ./src/backend/uep-protection.cpp
-	     ./src/backend/fib-processor.cpp
 	     ./src/backend/firecode-checker.cpp
 	     ./src/backend/frame-processor.cpp
 	     ./src/backend/protTables.cpp
@@ -212,9 +219,9 @@ endif ()
 	     ./src/backend/audio/mp2processor.cpp
 	     ./src/backend/data/virtual-datahandler.cpp
 	     ./src/backend/data/pad-handler.cpp
-	     ./src/backend/data/mot-handler.cpp
-	     ./src/backend/data/mot-dir.cpp
-	     ./src/backend/data/mot-object.cpp
+	     ./src/backend/data/mot/mot-handler.cpp 
+	     ./src/backend/data/mot/mot-object.cpp 
+	     ./src/backend/data/mot/mot-dir.cpp 
 	     ./src/backend/data/data-processor.cpp
 	     ./devices/virtual-input.cpp
 	     ./devices/rawfiles/rawfiles.cpp
@@ -222,35 +229,39 @@ endif ()
 	     ./src/output/audio-base.cpp
 	     ./src/output/newconverter.cpp
 	     ./src/output/fir-filters.cpp
-	     ./src/various/fft-handler.cpp
-	     ./src/various/Xtan2.cpp
-	     ./src/various/dab-params.cpp
-	     ./src/various/band-handler.cpp
-	     ./src/various/text-mapper.cpp
+	     ./src/support/fft-handler.cpp
+	     ./src/support/Xtan2.cpp
+	     ./src/support/dab-params.cpp
+	     ./src/support/band-handler.cpp
+	     ./src/support/text-mapper.cpp
+	     ./src/support/dab_tables.cpp
+	     ./src/support/viterbi_768/viterbi-768.cpp
+	     ./src/support/viterbi_768/spiral-no-sse.c
 	)
 
 	set (${objectName}_UIS
-                ${${objectName}_UIS} ./forms/dabradio.ui)
+                ${${objectName}_UIS} ./forms/dabradio.ui
+	                             ./forms/audio-description.ui)
 
 	set (${objectName}_MOCS
 	     ./dab-processor.h
-	     ./service-list.h
-	     ./service-display.h
+	     ./service-description/service-descriptor.h 
+	     ./service-description/audio-descriptor.h 
 	     ./includes/output/audio-base.h
 	     ./includes/ofdm/sample-reader.h
 	     ./includes/ofdm/ofdm-decoder.h
 	     ./includes/ofdm/phasereference.h
-	     ./includes/backend/fic-handler.h
-	     ./includes/backend/fib-processor.h
+	     ./includes/ofdm/fic-handler.h
+	     ./includes/ofdm/fib-processor.h
 	     ./includes/backend/data-backend.h
 	     ./includes/backend/audio/faad-decoder.h
 	     ./includes/backend/audio/mp2processor.h
 	     ./includes/backend/audio/mp4processor.h
 	     ./includes/backend/data/virtual-datahandler.h
 	     ./includes/backend/data/pad-handler.h
-	     ./includes/backend/data/mot-handler.h
-	     ./includes/backend/data/mot-dir.h
-	     ./includes/backend/data/mot-object.h
+	     ./includes/backend/data/mot/mot-handler.h 
+	     ./includes/backend/data/mot/mot-object.h 
+	     ./includes/backend/data/mot/mot-dir.h 
 	     ./includes/backend/data/data-processor.h
 	)
 

@@ -41,67 +41,50 @@
 #include	"dab-params.h"
 
 class	RadioInterface;
-class	ficHandler;
-class	mscHandler;
 
-#ifdef	__THREADED_DECODING
-class	ofdmDecoder: public QThread {
-#else
 class	ofdmDecoder: public QObject {
-#endif
 Q_OBJECT
 public:
 		ofdmDecoder		(RadioInterface *,
 	                                 uint8_t,
 	                                 int16_t,
-	                                 ficHandler	*,
-	                                 mscHandler	*);
+	                                 RingBuffer<std::complex<float>> *ifBuffer = nullptr);
+
 		~ofdmDecoder		(void);
 	void	processBlock_0		(std::vector<std::complex<float> >);
-	void	decodeFICblock		(std::vector<std::complex<float> >, int32_t n);
-	void	decodeMscblock		(std::vector<std::complex<float> >, int32_t n);
+	void	decode			(std::vector<std::complex<float> >,
+                                         int32_t n, int16_t *);
+
 	int16_t	get_snr			(std::complex<float> *);
 	void	stop			(void);
 	void	reset			(void);
-#ifndef	__THREADED_DECODING
-	void	start			(void);
-#endif
 private:
-	RadioInterface	*myRadioInterface;
-	dabParams	params;
-	fftHandler	my_fftHandler;
-	ficHandler	*my_ficHandler;
-	mscHandler	*my_mscHandler;
-#ifdef	__THREADED_DECODING
-	void		run		(void);
-	std::atomic<bool>		running;
-	std::complex<float>	**command;
-	int16_t		amount;
-	int16_t		currentBlock;
-	void		processBlock_0		(void);
-	void		decodeFICblock		(int32_t n);
-	void		decodeMscblock		(int32_t n);
-	QSemaphore	bufferSpace;
-	QWaitCondition	commandHandler;
-	QMutex		helper;
-#endif
-	int32_t		T_s;
-	int32_t		T_u;
-	int32_t		T_g;
-	int32_t		nrBlocks;
-	int32_t		carriers;
-	int16_t		getMiddle	(void);
-	std::vector<complex<float>>	phaseReference;
-	std::vector<int16_t>		ibits;
-	std::complex<float>	*fft_buffer;
-	interLeaver	myMapper;
-	phaseTable	*phasetable;
-	int32_t		blockIndex;
-	int16_t		snrCount;
-	int16_t		snr;
+	RadioInterface  *myRadioInterface;
+        dabParams       params;
+        fftHandler      my_fftHandler;
+        interLeaver     myMapper;
+
+        RingBuffer<std::complex<float>> *iqBuffer;
+        float           computeQuality  (std::complex<float> *);
+        int32_t         T_s;
+        int32_t         T_u;
+        int32_t         T_g;
+        int32_t         nrBlocks;
+        int32_t         carriers;
+        int16_t         getMiddle       (void);
+        std::vector<complex<float>>     phaseReference;
+        std::vector<int16_t>            ibits;
+        std::complex<float>     *fft_buffer;
+        phaseTable      *phasetable;
+        int32_t         blockIndex;
+        int16_t         snrCount;
+        int16_t         snr;
 	int16_t		maxSignal;
 signals:
 	void		show_snr	(int);
+	void            showIQ          (int);
+        void            showQuality     (float);
+
 };
 
 #endif

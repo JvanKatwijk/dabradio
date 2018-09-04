@@ -4,19 +4,19 @@
  *    Jan van Katwijk (J.vanKatwijk@gmail.com)
  *    Lazy Chair Computing
  *
- *    This file is part of the Qt-DAB program
- *    Qt-DAB is free software; you can redistribute it and/or modify
+ *    This file is part of the dabradio program
+ *    dabradio is free software; you can redistribute it and/or modify
  *    it under the terms of the GNU General Public License as published by
  *    the Free Software Foundation; either version 2 of the License, or
  *    (at your option) any later version.
  *
- *    Qt-DAB is distributed in the hope that it will be useful,
+ *    dabradio is distributed in the hope that it will be useful,
  *    but WITHOUT ANY WARRANTY; without even the implied warranty of
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *    GNU General Public License for more details.
  *
  *    You should have received a copy of the GNU General Public License
- *    along with Qt-DAB if not, write to the Free Software
+ *    along with dabradio if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include	"dab-processor.h"
@@ -24,6 +24,7 @@
 #include	"msc-handler.h"
 #include	"radio.h"
 #include	"dab-params.h"
+#include	"timesyncer.h"
 //
 /**
   *	\brief dabProcessor
@@ -41,19 +42,21 @@
 	                                 int16_t	diff_length,
 	                                 QString	picturesPath):
 	                                 params (dabMode),
-	                                 myReader (mr, theDevice),
+	                                 myReader (mr,
+	                                           theDevice,
+	                                           nullptr),
 	                                 my_ficHandler (mr, dabMode),
 	                                 my_mscHandler (mr, dabMode,
 	                                                picturesPath),
 	                                 phaseSynchronizer (mr,
 	                                                    dabMode, 
                                                             threshold,
-	                                                    diff_length),
+	                                                    diff_length,
+	                                                    nullptr),
 	                                 my_ofdmDecoder (mr,
 	                                                 dabMode,
 	                                                 theDevice -> bitDepth (),
-	                                                 &my_ficHandler,
-	                                                 &my_mscHandler) {
+	                                                 nullptr) {
 int32_t	i;
 
 	this	-> myRadioInterface	= mr;
@@ -71,8 +74,8 @@ int32_t	i;
 	ofdmBufferIndex			= 0;
 	ofdmSymbolCount			= 0;
 	tokenCount			= 0;
-	fineCorrector			= 0;	
-	f2Correction			= true;
+	fineOffset			= 0;	
+	correctionNeeded		= true;
 	attempts			= 0;
 	myReader. setRunning  (false);
 }
@@ -107,89 +110,45 @@ void	dabProcessor::start (int frequency, bool giveSignal) {
 void	dabProcessor::run	(void) {
 int32_t		startIndex;
 int32_t		i;
-std::complex<float>	FreqCorr;
-int32_t		counter;
-float		cLevel;
-int32_t		syncBufferIndex	= 0;
-const
-int32_t		syncBufferSize	= 32768;
-const
-int32_t		syncBufferMask	= syncBufferSize - 1;
-float		envBuffer	[syncBufferSize];
+int		attempts;
 
-        fineCorrector   = 0;
-        f2Correction    = true;
-        syncBufferIndex = 0;
+std::complex<float>	FreqCorr;
+timeSyncer	myTimeSyncer (&myReader);
+
+        fineOffset 	  = 0;
+        correctionNeeded	= true;
 	attempts	= 0;
         theDevice  -> resetBuffer ();
 	theDevice	-> restartReader ();
 	coarseOffset	= 0;
+	fineOffset	= 0;
 	myReader. setRunning (true);
-	my_ofdmDecoder. start ();
+	my_mscHandler. start ();
 //
 //	to get some idea of the signal strength
 	try {
 	   for (i = 0; i < T_F / 5; i ++) {
 	      myReader. getSample (0);
 	   }
-Initing:
+//Initing:
 notSynced:
-	   syncBufferIndex	= 0;
-	   cLevel		= 0;
-
-	   for (i = 0; i < C_LEVEL_SIZE; i ++) {
-	      std::complex<float> sample	= myReader. getSample (0);
-	      envBuffer [syncBufferIndex]	= jan_abs (sample);
-	      cLevel	 			+= envBuffer [syncBufferIndex];
-	      syncBufferIndex ++;
-	   }
-/**
-  *	We now have initial values for cLevel (i.e. the sum
-  *	over the last C_LEVEL_SIZE samples) and sLevel, the long term average.
-  */
-SyncOnNull:
-/**
-  *	here we start looking for the null level, i.e. a dip
-  */
-	   counter	= 0;
 	   setSynced (false);
-	   while (cLevel / C_LEVEL_SIZE  > 0.40 * myReader. get_sLevel ()) {
-	      std::complex<float> sample	=
-	                      myReader. getSample (coarseOffset + fineCorrector);
-	      envBuffer [syncBufferIndex] = jan_abs (sample);
-//	update the levels
-	      cLevel += envBuffer [syncBufferIndex] -
-	                envBuffer [(syncBufferIndex - C_LEVEL_SIZE) & syncBufferMask];
-	      syncBufferIndex = (syncBufferIndex + 1) & syncBufferMask;
-	      counter ++;
-	      if (counter > T_F) { // hopeless
-	         if (giveSignal && (++ attempts >= 5)) {
-	            emit (No_Signal_Found ());
+	   switch (myTimeSyncer. sync (T_null, T_F)) {
+              case TIMESYNC_ESTABLISHED:
+                 break;                 // yes, we are ready
+
+              case NO_DIP_FOUND:
+                 if (giveSignal && (++ attempts >= 5)) {
+                    emit (No_Signal_Found ());
                     attempts = 0;
                  }
-	         goto notSynced;
-	      }
-	   }
-/**
-  *	It seemed we found a dip that started app 65/100 * 50 samples earlier.
-  *	We now start looking for the end of the null period.
-  */
-	   counter	= 0;
-SyncOnEndNull:
-	   while (cLevel / C_LEVEL_SIZE < 0.75 * myReader. get_sLevel ()) {
-	      std::complex<float> sample =
-	              myReader. getSample (coarseOffset + fineCorrector);
-	      envBuffer [syncBufferIndex] = jan_abs (sample);
-//	update the levels
-	      cLevel += envBuffer [syncBufferIndex] -
-	                envBuffer [(syncBufferIndex - C_LEVEL_SIZE) & syncBufferMask];
-	      syncBufferIndex = (syncBufferIndex + 1) & syncBufferMask;
-	      counter	++;
-//
-	      if (counter > T_null + 50) { // hopeless
-	         goto notSynced;
-	      }
-	   }
+                 goto notSynced;
+
+              default:                  // does not happen
+              case NO_END_OF_DIP_FOUND:
+                 goto notSynced;
+           }
+
 /**
   *	The end of the null period is identified, the actual end
   *	is probably about 40 samples earlier.
@@ -207,17 +166,18 @@ SyncOnPhase:
   *	is part of the samples read.
   */
 	myReader. getSamples (ofdmBuffer. data (),
-	                        T_u, coarseOffset + fineCorrector);
+	                        T_u, coarseOffset + fineOffset);
 //
 //	and then, call upon the phase synchronizer to verify/compute
 //	the real "first" sample
 	   startIndex = phaseSynchronizer. findIndex (ofdmBuffer);
 	   if (startIndex < 0) { // no sync, try again
-	      if (!f2Correction) {
+	      if (!correctionNeeded) {
 	         setSyncLost ();
 	      }
 	      goto notSynced;
 	   }
+
 /**
   *	Once here, we are synchronized, we need to copy the data we
   *	used for synchronization for block 0
@@ -238,13 +198,13 @@ Block_0:
 	   setSynced (true);
 	   myReader. getSamples (&((ofdmBuffer. data ()) [ofdmBufferIndex]),
 	                           T_u - ofdmBufferIndex,
-	                           coarseOffset + fineCorrector);
+	                           coarseOffset + fineOffset);
 	   my_ofdmDecoder. processBlock_0 (ofdmBuffer);
 
 //	Here we look only at the block_0 when we need a coarse
 //	frequency synchronization.
-	   f2Correction	= !my_ficHandler. syncReached ();
-	   if (f2Correction) {
+	   correctionNeeded	= !my_ficHandler. syncReached ();
+	   if (correctionNeeded) {
 	      int correction	=
 	            phaseSynchronizer. estimate_CarrierOffset (ofdmBuffer);
 	      if (correction != 100) {
@@ -264,39 +224,33 @@ Data_blocks:
   *	corresponding samples in the datapart.
   */
 	   FreqCorr	= std::complex<float> (0, 0);
-	   for (ofdmSymbolCount = 1;
-	        ofdmSymbolCount < 4; ofdmSymbolCount ++) {
-	      myReader. getSamples (ofdmBuffer. data (),
-	                              T_s, coarseOffset + fineCorrector);
-	      for (i = (int)T_u; i < (int)T_s; i ++) 
-	         FreqCorr += ofdmBuffer [i] * conj (ofdmBuffer [i - T_u]);
+	   for (int ofdmSymbolCount = 1;
+                ofdmSymbolCount < nrBlocks; ofdmSymbolCount ++) {
+              std::vector<int16_t> ibits;
+              ibits. resize (2 * params. get_carriers ());
+              myReader. getSamples (ofdmBuffer. data (),
+                                      T_s, coarseOffset + fineOffset);
+              for (i = (int)T_u; i < (int)T_s; i ++)
+                 FreqCorr += ofdmBuffer [i] * conj (ofdmBuffer [i - T_u]);
 
-	      my_ofdmDecoder. decodeFICblock (ofdmBuffer, ofdmSymbolCount);
-	   }
-
-///	and similar for the (params -> L - 4) MSC blocks
-	   for (ofdmSymbolCount = 4;
-	        ofdmSymbolCount <  (uint16_t)nrBlocks;
-	        ofdmSymbolCount ++) {
-	      myReader. getSamples (ofdmBuffer. data (),
-	                              T_s, coarseOffset + fineCorrector);
-	      for (i = (int32_t)T_u; i < (int32_t)T_s; i ++) 
-	         FreqCorr += ofdmBuffer [i] * conj (ofdmBuffer [i - T_u]);
-
-	      my_ofdmDecoder. decodeMscblock (ofdmBuffer, ofdmSymbolCount);
-	   }
+              if (ofdmSymbolCount < 4) {
+                 my_ofdmDecoder. decode (ofdmBuffer,
+                                        ofdmSymbolCount, ibits. data ());
+                 my_ficHandler. process_ficBlock (ibits, ofdmSymbolCount);
+              }
+              my_mscHandler. process_Msc  (&((ofdmBuffer. data ()) [T_g]),
+                                                            ofdmSymbolCount);
+           }
 
 NewOffset:
 //	we integrate the newly found frequency error with the
 //	existing frequency error.
-	   fineCorrector += 0.1 * arg (FreqCorr) / (2 * M_PI) * carrierDiff;
+	   fineOffset += 0.1 * arg (FreqCorr) / (2 * M_PI) * carrierDiff;
 //
 /**
   *	OK,  here we are at the end of the frame
   *	Assume everything went well and skip T_null samples
   */
-	   syncBufferIndex	= 0;
-	   cLevel		= 0;
 	   myReader. getSamples (ofdmBuffer. data (),
 	                         T_null, coarseOffset);
 /**
@@ -304,60 +258,53 @@ NewOffset:
   *	samples ahead. Before going for the next frame, we
   *	we just check the fineCorrector
   */
-	   if (fineCorrector > carrierDiff / 2) {
-	      coarseOffset += carrierDiff;
-	      fineCorrector -= carrierDiff;
+	   if (fineOffset > carrierDiff / 2) {
+	      coarseOffset	+= carrierDiff;
+	      fineOffset	-= carrierDiff;
 	   }
 	   else
-	   if (fineCorrector < -carrierDiff / 2) {
+	   if (fineOffset < -carrierDiff / 2) {
 	      coarseOffset -= carrierDiff;
-	      fineCorrector += carrierDiff;
+	      fineOffset += carrierDiff;
 	   }
 ReadyForNewFrame:
 ///	and off we go, up to the next frame
-	   counter	= 0;
 	   goto SyncOnPhase;
 	}
 	catch (int e) {
 //	   fprintf (stderr, "dabProcessor is stopping\n");
 	   ;
 	}
-	theDevice	-> stopReader ();
-	my_ofdmDecoder. stop ();
 	my_mscHandler.  stop ();
 	my_ficHandler.  stop ();
 }
 
 void	dabProcessor:: reset	(void) {
 	myReader. setRunning (false);
-	theDevice	-> stopReader ();
 	while (isRunning ())
 	   usleep (1000);
 	usleep (10000);
-	my_ofdmDecoder. stop ();
-	my_mscHandler.  reset ();
 	my_ficHandler.  reset ();
 	QThread::start ();
 }
 
 void	dabProcessor::stop	(void) {
 	myReader. setRunning (false);
+	theDevice	-> restartReader ();
 	while (isRunning ())
 	   usleep (1000);
-	usleep (10000);
-	my_ofdmDecoder. stop ();
-	my_mscHandler.  reset ();
-	my_ficHandler.  reset ();
 	theDevice	-> stopReader ();
+	usleep (10000);
+	my_ficHandler.  reset ();
 }
 
 void	dabProcessor::coarseCorrectorOn (void) {
-	f2Correction 	= true;
+	correctionNeeded 	= true;
 	coarseOffset	= 0;
 }
 
 void	dabProcessor::coarseCorrectorOff (void) {
-	f2Correction	= false;
+	correctionNeeded	= false;
 }
 
 //	we could have derived the dab processor from fic and msc handlers,

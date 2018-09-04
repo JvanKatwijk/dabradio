@@ -29,72 +29,31 @@
 #include	"dab-constants.h"
 #include	<QMainWindow>
 #include	<QStringList>
+#include	<QStringListModel>
+#include	<QListView>
 #include	<QComboBox>
 #include	<QLabel>
 #include	<QTimer>
 #include	<sndfile.h>
+#include	<atomic>
+#include	<map>
 #include	"ui_dabradio.h"
 #include	"dab-processor.h"
 #include	"ringbuffer.h"
 #include        "band-handler.h"
 #include	"text-mapper.h"
-#include	"service-list.h"
-#include	<atomic>
+#include	"service-descriptor.h"
 class	QSettings;
 class	virtualInput;
 class	audioBase;
 class	common_fft;
-
+class	audioDescriptor;
 class	spectrumhandler;
 
 /*
  *	GThe main gui object. It inherits from
  *	QDialog and the generated form
  */
-
-class serviceDescriptor {
-public:
-QString name;
-QString	channel;
-int32_t	serviceId;
-uint8_t	shortForm;
-uint8_t	protLevel;
-int32_t	bitRate;
-int32_t	startAddr;
-int32_t	length;
-QString	language;
-QString	programType;
-
-	serviceDescriptor (QString name, QString channel, audiodata *d) {
-	   textMapper	the_textMapper;
-	   this -> name		= name;
-	   this -> channel	= channel;
-	   this	-> serviceId	= d	-> serviceId;
-	   this	-> shortForm	= d	-> shortForm;
-	   this	-> protLevel	= d	-> protLevel;
-	   this	-> bitRate	= d	-> bitRate;
-	   this	-> startAddr	= d	-> startAddr;
-	   this	-> length	= d	-> length;
-	   this	-> language	= the_textMapper.
-                       get_programm_language_string (d -> language);
-	   this	-> programType	= the_textMapper.
-                       get_programm_type_string (d -> programType);
-	}
-	serviceDescriptor (QString name, QString channel) {
-	   this -> name		= name;
-	   this -> channel	= channel;
-	   this	-> serviceId	= 0;
-	   this	-> shortForm	= 0;
-	   this	-> protLevel	= 0;
-	   this	-> bitRate	= 0;
-	   this	-> startAddr	= 0;
-	   this	-> length	= 0;
-	   this	-> language	= QString ("");
-	   this	-> programType	= QString ("");
-	}
-	~serviceDescriptor (void) {}
-};
-
 
 class RadioInterface: public QMainWindow,
 		      private Ui_dabradio {
@@ -116,10 +75,16 @@ private:
 	void		setColor		(QLabel *l, uint8_t b);
 	void		setColor		(QPushButton *l, uint8_t b);
 
+	QTimer          secondsTimer;
+
+	typedef std::pair <QString, serviceDescriptor *> mapElement;
+	std::map<QString, serviceDescriptor *> serviceMap;
 	std::atomic<int>	channelNumber;
 	int		serviceCount;
 	QString		selectedChannel;
-	std::vector<serviceDescriptor *> services;
+	QStringListModel        ensemble;
+        QStringList     Services;
+	QListView	*ensembleDisplay;
 	uint8_t		dabBand;
 	uint8_t		dabMode;
 	uint8_t		isSynced;
@@ -140,11 +105,10 @@ private:
 	bool		saveSlides;
 	bool		showSlides;
 	QFrame		*serviceCharacteristics;
-	serviceList	*ensembleDisplay;
 	QTimer		displayTimer;
 	QTimer		signalTimer;
 	QTimer		channelTimer;
-	QString		currentName;
+	QString		currentService;
 	bool		has_presetName;
 	int32_t		numberofSeconds;
 	int16_t		ficBlocks;
@@ -152,10 +116,15 @@ private:
 
 	int		autogain;
 	QString		picturesPath;
-	void		selectService		(QString);
+	void		startService		(QString);
 	void		startScanning		(void);
 	void		TerminateProcess	(void);
+	audioDescriptor	*serviceDescription;
+protected:
+        bool    eventFilter (QObject *obj, QEvent *event);
+
 public slots:
+	void		set_CorrectorDisplay	(int);
 	void		addtoEnsemble		(const QString &);
 	void		nameofEnsemble		(int, const QString &);
 	void		set_ensembleName	(const QString &);
@@ -172,19 +141,24 @@ public slots:
 	void		set_streamSelector	(int);
 	void		nextChannel		(void);
 	void		closeEvent		(QCloseEvent *event);
+        void            updateTime              (void);
 
 	void		show_motHandling	(bool);
+	void		showImpulse		(int);
+	void		showSpectrum		(int);
+	void		showIQ			(int);
 	void		show_frameErrors	(int);
 	void		show_rsErrors		(int);
 	void		show_aacErrors		(int);
+	void		showQuality		(float);
+	void		show_snr		(int);
 //	Somehow, these must be connected to the GUI
 private slots:
 	void		handle_gainSlider	(int);
 	void		handle_autoButton	(void);
 	void		reset			(void);
-	void		updateTimeDisplay	(void);
 	void		channelTimer_timeout	(void);
-	void		selectService		(const QString &, const QString &);
+	void		selectService		(QModelIndex);
 signals:
 	void		set_quality		(int);
 };

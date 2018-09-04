@@ -102,10 +102,10 @@ private:
 	int32_t		carriers;
 	int32_t		carrierDiff;
 	std::vector<std::complex<float> > dataBuffer;
-	int16_t		fineCorrector;
+	int16_t		fineOffset;
 	int32_t		coarseOffset;
 
-	bool		f2Correction;
+	bool		correctionNeeded;
 	int32_t		tokenCount;
 	std::vector<std::complex<float>	>ofdmBuffer;
 	uint32_t	ofdmBufferIndex;

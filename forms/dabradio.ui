@@ -345,6 +345,9 @@
       <height>31</height>
      </rect>
     </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reset button. Press this and a scan is made over all channels in the selected band (BAND III by default)&lt;/p&gt;&lt;p&gt;to collect data on available services in these channels.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
     <property name="text">
      <string>reset</string>
     </property>
@@ -376,6 +379,9 @@
       <width>31</width>
       <height>21</height>
      </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Synchronization indicator. Greem means sync is OK&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="text">
      <string/>

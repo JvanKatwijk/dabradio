@@ -32,11 +32,18 @@ int16_t res     = 1;
 }
 
 	sampleReader::sampleReader (RadioInterface *mr,
-	                            virtualInput	*theRig) {
+	                            virtualInput   *theRig,
+	                            RingBuffer<std::complex<float>>*spectrumBuffer) {
 int	i;
 	this	-> theRig	= theRig;
+	this	-> spectrumBuffer	= spectrumBuffer;
         bufferSize		= 32768;
-        localCounter		= 0;
+        connect (this, SIGNAL (show_Spectrum (int)),
+                 mr, SLOT (showSpectrum (int)));
+        localBuffer. resize (bufferSize);
+        localCounter            = 0;
+        connect (this, SIGNAL (show_Corrector (int)),
+                 mr, SLOT (set_CorrectorDisplay (int)));
 	currentPhase	= 0;
 	sLevel		= 0;
 	sampleCount	= 0;
@@ -48,7 +55,7 @@ int	i;
 
 	bufferContent	= 0;
 	corrector	= 0;
-	dumpfilePointer. store (NULL);
+	dumpfilePointer. store (nullptr);
 	dumpIndex	= 0;
 	dumpScale	= valueFor (theRig -> bitDepth ());
 }
@@ -69,7 +76,7 @@ std::complex<float> sampleReader::getSample (int32_t phaseOffset) {
 std::complex<float> temp;
 
 	corrector	= phaseOffset;
-	if (!running. load ())
+	if (!running. load ()) 
 	   throw 21;
 
 ///	bufferContent is an indicator for the value of ... -> Samples ()
@@ -87,7 +94,7 @@ std::complex<float> temp;
 //	so here, bufferContent > 0
 	theRig -> getSamples (&temp, 1);
 	bufferContent --;
-	if (dumpfilePointer. load () != NULL) {
+	if (dumpfilePointer. load () != nullptr) {
 	   dumpBuffer [2 * dumpIndex    ] = real (temp) * dumpScale;
 	   dumpBuffer [2 * dumpIndex + 1] = imag (temp) * dumpScale;
 	   if ( ++dumpIndex >= DUMPSIZE / 2) {
@@ -96,6 +103,9 @@ std::complex<float> temp;
 	      dumpIndex = 0;
 	   }
 	}
+
+       if (localCounter < bufferSize)
+           localBuffer [localCounter ++]        = temp;
 
 //	OK, we have a sample!!
 //	first: adjust frequency. We need Hz accuracy
@@ -109,6 +119,12 @@ std::complex<float> temp;
 	if (++ sampleCount > INPUT_RATE / N) {
 	   show_Corrector	(corrector);
 	   sampleCount = 0;
+	   if (spectrumBuffer != nullptr) {
+              spectrumBuffer -> putDataIntoBuffer (localBuffer. data (),
+                                                            localCounter);
+              emit show_Spectrum (bufferSize);
+	   }
+           localCounter = 0;
 	}
 	return temp;
 }
@@ -133,8 +149,10 @@ int32_t		i;
 //
 //	so here, bufferContent >= n
 	n	= theRig -> getSamples (v, n);
+	if (!running. load ())	
+	   throw 20;
 	bufferContent -= n;
-	if (dumpfilePointer. load () != NULL) {
+	if (dumpfilePointer. load () != nullptr) {
 	   for (i = 0; i < n; i ++) {
 	      dumpBuffer [2 * dumpIndex    ] = real (v [i]) * dumpScale;
 	      dumpBuffer [2 * dumpIndex + 1] = imag (v [i]) * dumpScale;
@@ -153,6 +171,8 @@ int32_t		i;
 //
 //	Note that "phase" itself might be negative
 	   currentPhase	= (currentPhase + INPUT_RATE) % INPUT_RATE;
+	   if (localCounter < bufferSize)
+	      localBuffer [localCounter ++]     = v [i];
 	   v [i]	*= oscillatorTable [currentPhase];
 	   sLevel	= 0.00001 * jan_abs (v [i]) + (1 - 0.00001) * sLevel;
 	}
@@ -160,7 +180,11 @@ int32_t		i;
 	sampleCount	+= n;
 	if (sampleCount > INPUT_RATE / N) {
 	   show_Corrector	(corrector);
-	   localCounter = 0;
+	   if (spectrumBuffer != nullptr) {
+	      spectrumBuffer -> putDataIntoBuffer (localBuffer. data (),
+                                                             bufferSize);
+              emit show_Spectrum (bufferSize);
+	   }
 	   sampleCount = 0;
 	}
 }
@@ -170,6 +194,6 @@ void	sampleReader::startDumping (SNDFILE *f) {
 }
 
 void	sampleReader::stopDumping (void) {
-	dumpfilePointer. store (NULL);
+	dumpfilePointer. store (nullptr);
 }
 

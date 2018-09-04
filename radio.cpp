@@ -29,11 +29,12 @@
 #include	<numeric>
 #include	<unistd.h>
 #include	<vector>
+#include        <QMouseEvent>
 #include	"radio.h"
 #include	"band-handler.h"
 #include	"audiosink.h"
+#include	"audio-descriptor.h"
 #include	<mutex>
-#include	"service-display.h"
 
 /**
   *	We use the creation function merely to set up the
@@ -61,11 +62,6 @@ int	gain;
 	scanning		= false;
 	isSynced		= UNSYNCED;
 	audioBuffer		= new RingBuffer<int16_t>(16 * 32768);
-
-/**	threshold is used in the phaseReference class 
-  *	as threshold for checking the validity of the correlation result
-  *	3 is a reasonable value
-  */
 	threshold	=
 	           dabSettings -> value ("threshold", 3). toInt ();
 //
@@ -82,7 +78,6 @@ int	gain;
 	   dabMode = 1;
 
 	dataBuffer		= new RingBuffer<uint8_t>(32768);
-	currentName		= QString ("");
 
 	saveSlides	= dabSettings -> value ("saveSlides", 1). toInt ();
 	showSlides	= dabSettings -> value ("showPictures", 1). toInt ();
@@ -127,8 +122,9 @@ int	gain;
 
 	copyrightLabel		-> setToolTip (versionText);
 
-	ensembleDisplay	= new serviceList (this, serviceNames);
+	ensembleDisplay	= new QListView (NULL);
 	ensembleDisplay	-> show ();
+	ensembleDisplay	-> setToolTip ("Right clicking on a service name will make some technical details on the selected service visible");
 
 	soundOut		= new audioSink		(latency);
 	((audioSink *)soundOut)	-> setupChannels (streamoutSelector);
@@ -167,15 +163,11 @@ int	gain;
 	my_dabProcessor	= new dabProcessor (this,
 	                                    inputDevice,
 	                                    dabMode,
-	                                    threshold, diff_length,
+	                                    threshold,
+	                                    diff_length,
                                             picturesPath);
 	connect (my_dabProcessor, SIGNAL (setSynced (char)),
                  this, SLOT (setSynced (char)));
-
-//
-	serviceDescriptor *ss = new serviceDescriptor (" ", " ");
-	services. resize (1);
-	services [0] = ss;	// a dummy
 //
 	connect	(gainSlider, SIGNAL (valueChanged (int)),
 	         this, SLOT (handle_gainSlider (int)));
@@ -183,7 +175,14 @@ int	gain;
 	         this, SLOT (handle_autoButton (void)));
 
 	serviceCharacteristics	= NULL;
+	       secondsTimer. setInterval (1000);
+        connect (&secondsTimer, SIGNAL (timeout (void)),
+                 this, SLOT (updateTime (void)));
+        secondsTimer. start (1000);
+
 	startScanning ();
+	qApp    -> installEventFilter (this);
+	serviceDescription	= NULL;
 }
 
 	RadioInterface::~RadioInterface (void) {
@@ -199,9 +198,6 @@ void	RadioInterface:: startScanning (void) {
 	            this, SLOT (nextChannel (void)));
 	disconnect (my_dabProcessor, SIGNAL (No_Signal_Found (void)),
                     this, SLOT (nextChannel (void)));
-	disconnect (ensembleDisplay,
-	            SIGNAL (newService (const QString &, const QString &)),
-	            this, SLOT (selectService (const QString &, const QString &)));
 	serviceCount	= 0;
 	serviceCountDisplay -> display (serviceCount);
 	channelNumber = 0;
@@ -222,9 +218,6 @@ void	RadioInterface:: startScanning (void) {
 	               this, SLOT (nextChannel (void)));
            disconnect (my_dabProcessor, SIGNAL (No_Signal_Found (void)),
                        this, SLOT (nextChannel (void)));
-	   connect (ensembleDisplay,
-	            SIGNAL (newService (const QString &, const QString &)),
-	            this, SLOT (selectService (const QString &, const QString &)));
 	   connect (resetButton, SIGNAL (clicked (void)),
 	            this, SLOT (reset (void)));
 	   return;
@@ -234,10 +227,6 @@ void	RadioInterface:: startScanning (void) {
 	QString text = "scanning ch ";
 	text. append (theBand -> channel (channelNumber. load ()));
 	set_ensembleName (text);
-	ensembleDisplay	-> reset ();
-	services. resize (1);
-	serviceDescriptor *ss = new serviceDescriptor (" ", " ");
-	services [0] = ss;	// a dummy
 	int tunedFrequency	=
 	        theBand -> Frequency (channelNumber. load ());
 	connect (&signalTimer, SIGNAL (timeout (void)),
@@ -275,8 +264,8 @@ void	RadioInterface::nextChannel (void) {
 	   serviceLabel -> setText ("select a services");
 	   serviceLabel -> setStyleSheet ("QLabel {background-color : green}");
 	   connect (ensembleDisplay,
-	            SIGNAL (newService (const QString &, const QString &)),
-	            this, SLOT (selectService (const QString &, const QString &)));
+	            SIGNAL (clicked (QModelIndex)),
+	            this, SLOT (selectService (QModelIndex)));
 	   connect (resetButton, SIGNAL (clicked (void)),
 	            this, SLOT (reset (void)));
 	   return;
@@ -298,14 +287,25 @@ void	RadioInterface::nextChannel (void) {
 void	RadioInterface::reset (void) {
 	my_dabProcessor	-> stop ();
 	disconnect (ensembleDisplay,
-	         SIGNAL (newService (const QString &, const QString &)),
-	         this, SLOT (selectService (const QString &, const QString &)));
+	         SIGNAL (clicked (QModelIndex)),
+	         this, SLOT (selectService (QModelIndex)));
 	disconnect (resetButton, SIGNAL (clicked (void)),
 	            this, SLOT (reset (void)));
 	for (int i = 0; i < channels; i ++) {
 	   QString channel = theBand -> channel (i);
 	   dabSettings -> setValue (channel, 1);
 	}
+	if (serviceDescription != NULL)
+	   delete serviceDescription;
+	serviceDescription	= NULL;
+	Services 	= QStringList ();
+	ensemble. setStringList (Services);
+        ensembleDisplay         -> setModel (&ensemble);
+	for (std::map<QString, serviceDescriptor *>
+	                    ::iterator it = serviceMap. begin ();
+	     it != serviceMap. end (); it ++)
+	   delete (it -> second);
+	serviceMap. clear ();
 	startScanning ();
 }
 //
@@ -314,7 +314,8 @@ void	RadioInterface::reset (void) {
 //	when setting the channel for selecting a service in
 //	the large list
 void	RadioInterface::addtoEnsemble (const QString &s) {
-	if (!scanning && (services. size () > 0))
+	if (!scanning)
+//	if (!scanning && (services. size () > 0))
 	   return;
 
 	if (scanning) {
@@ -329,12 +330,14 @@ void	RadioInterface::addtoEnsemble (const QString &s) {
 	           new serviceDescriptor (t,
 	                                  channel,
 	                                  &d);
-	      services. push_back (service);
-	      ensembleDisplay -> addRow (t,
-	                                 channel,
-	                                 QString::number (d. bitRate),
-	                                 service -> programType);
+	      Services << s;
+
+	      Services. removeDuplicates ();
+	      ensemble. setStringList (Services);
+	      ensembleDisplay -> setModel (&ensemble);
+	      
 	      dabSettings	-> setValue (channel, 1);
+	      serviceMap. insert (mapElement (t, service));
 	   }
 	}
 }
@@ -423,6 +426,26 @@ void	RadioInterface::setColor (QPushButton *l, uint8_t b) {
 
 void	RadioInterface::show_motHandling	(bool b) {
 	setColor (motLabel, b);
+}
+
+void	RadioInterface::showSpectrum		(int s) {
+	(void)s;
+}
+
+void	RadioInterface::showIQ			(int s) {
+	(void)s;
+}
+
+void	RadioInterface::showQuality		(float f) {
+	(void)f;
+}
+
+void	RadioInterface::show_snr		(int s) {
+	(void)s;
+}
+
+void	RadioInterface::set_CorrectorDisplay	(int c) {
+	(void)c;
 }
 
 void	RadioInterface::show_frameErrors	(int e) {
@@ -520,7 +543,10 @@ void	RadioInterface::showMOT		(QByteArray data,
 	}
 }
 //
-//
+void	RadioInterface::showImpulse (int a) {
+	(void)a;
+}
+
 
 /**
   *	\brief changeinConfiguration
@@ -571,6 +597,8 @@ void	RadioInterface::TerminateProcess (void) {
 	fprintf (stderr, "deleted dabProcessor\n");
 	if (ensembleDisplay != NULL)
 	   delete	ensembleDisplay;
+	if (serviceDescription != NULL)
+	   delete serviceDescription;
 	if (pictureLabel != NULL)
 	   delete pictureLabel;
 	pictureLabel = NULL;		// signals may be pending, so careful
@@ -580,61 +608,59 @@ void	RadioInterface::TerminateProcess (void) {
 	fprintf (stderr, ".. end the radio silences\n");
 }
 
-
-void	RadioInterface::updateTimeDisplay (void) {
-	time_t now = time (0);
-	char * dt = ctime (&now);
-	timeDisplay	-> setText (QString (dt));
-}
 //
 //	Signals from the GUI
 /////////////////////////////////////////////////////////////////////////
 
 //	Selecting a service is easy, the fib is asked to
 //	hand over the relevant data in two steps
-void	RadioInterface::selectService (const QString &currentProgram,
-	                               const QString &channel) {
+void	RadioInterface::selectService (QModelIndex ind ) {
 	if (scanning)	// be polite, wait until we finished scanning
 	   return;
 
-	if (serviceCharacteristics != NULL)
-	   delete serviceCharacteristics;
+QString currentProgram = ensemble. data (ind, Qt::DisplayRole). toString ();
+
 	running. store (true);
 	serviceLabel	-> setStyleSheet ("QLabel {background-color : white}");
 	serviceLabel	-> setText (currentProgram);
-	services [0]	= new serviceDescriptor (currentProgram, channel);
+
+	std::map<QString, serviceDescriptor *>::iterator it;
+	it	= serviceMap. find (currentProgram);
+	if (it == serviceMap. end ())
+	   return;
+	serviceDescriptor *sd = it -> second;
 	fprintf (stderr, "channel = %s, currentChannel %s\n",
-	          channel. toLatin1 (). data (),
+	          sd -> channel. toLatin1 (). data (),
 	          selectedChannel. toLatin1 (). data ());
-	if (selectedChannel != channel) {
+	if (selectedChannel != sd -> channel) {
 	   my_dabProcessor	-> stop ();
 	   connect (&channelTimer, SIGNAL (timeout (void)),
 	                    this, SLOT (channelTimer_timeout (void)));
 	   channelTimer. start (5000);
-	   int tunedFrequency	= theBand -> Frequency (channel);
+	   int tunedFrequency	= theBand -> Frequency (sd -> channel);
 	   my_dabProcessor	-> start (tunedFrequency, false);
-	   selectedChannel = channel;
+	   selectedChannel = sd -> channel;
 	   fprintf (stderr, "ready to start %s (%s)\n",
 	                        currentProgram. toLatin1 (). data (),
-	                        channel. toLatin1 (). data ());
+	                        (sd -> channel). toLatin1 (). data ());
+	   currentService	= currentProgram;
 	}
 	else
-	   selectService (currentProgram);
+	   startService (currentProgram);
 }
 
 void	RadioInterface::channelTimer_timeout (void) {
 //	so, we were looking for a channel. Let us see if
 //	it has provided us with data
-QString currentService = services [0] -> name;
 	disconnect (&channelTimer, SIGNAL (timeout (void)),
 	                    this, SLOT (channelTimer_timeout (void)));
 	if (my_dabProcessor -> kindofService (currentService) != 
 	                                                   AUDIO_SERVICE)
 	   return;
-	selectService (currentService);
+	startService (currentService);
 }
 
-void	RadioInterface::selectService (QString currentService) {
+void	RadioInterface::startService (QString currentService) {
 	my_dabProcessor -> reset_msc ();
 	setStereo (false);
 
@@ -646,9 +672,6 @@ void	RadioInterface::selectService (QString currentService) {
 	   return;
 	}
 
-	serviceCharacteristics = new serviceDisplay (&d);
-	connect (this, SIGNAL (set_quality (int)),
-	         serviceCharacteristics, SLOT (set_qualityIndicator (int)));
 	my_dabProcessor -> set_audioChannel (&d, audioBuffer, dataBuffer);
 	soundOut	-> restart ();
 	showLabel (QString (" "));
@@ -712,4 +735,35 @@ QString defaultPath	= QDir::tempPath ();
 	   testdir. mkdir (picturesPath);
 }
 
+void    RadioInterface::updateTime              (void) {
+QDateTime currentTime = QDateTime::currentDateTime ();
+
+        timeDisplay     -> setText (currentTime.
+                                    toString (QString ("dd.MM.yy:hh:mm:ss")));
+}
+
+
+bool	RadioInterface::eventFilter (QObject *obj, QEvent *event) {
+	if ((obj == ensembleDisplay -> viewport ()) &&
+	    (event -> type () == QEvent::MouseButtonPress )) {
+	   QMouseEvent *ev = static_cast<QMouseEvent *>(event);
+           if (ev -> buttons () & Qt::RightButton) {
+	      audiodata ad;
+	      QString serviceName =
+	           this -> ensembleDisplay -> indexAt (ev -> pos()). data ().toString ();
+	      if (serviceDescription != NULL)
+	         delete serviceDescription;
+	      std::map<QString, serviceDescriptor *>::iterator it;
+	      it	= serviceMap. find (serviceName);
+	      if (it == serviceMap. end ())
+	         return true;
+	      serviceDescriptor *sd = it -> second;
+              if (sd -> defined) {
+	         serviceDescription = new audioDescriptor (sd);
+	         return true;
+	      }
+	   }
+	}
+	return QMainWindow::eventFilter (obj, event);
+}
 

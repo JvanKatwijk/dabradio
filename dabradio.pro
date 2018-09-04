@@ -24,14 +24,16 @@ TRANSLATIONS = i18n/de_DE.ts i18n/it_IT.ts i18n/hu_HU.ts
 
 DEPENDPATH += . \
 	      ./src \
+	      ./service-description \
 	      ./includes \
 	      ./src/ofdm \
 	      ./src/backend \
-	      ./src/backend/viterbi_768 \
 	      ./src/backend/audio \
 	      ./src/backend/data \
+	      ./src/backend/data/mot \
 	      ./src/output \
-	      ./src/various \
+	      ./src/support \
+	      ./src/support/viterbi_768 \
 	      ./devices \
 	      ./devices/rawfiles \
 	      ./devices/wavfiles \
@@ -39,20 +41,24 @@ DEPENDPATH += . \
 	      ./includes/backend \
 	      ./includes/backend/audio \
 	      ./includes/backend/data \
+	      ./includes/backend/data/mot \
 	      ./includes/output \
-	      ./includes/various 
+	      ./includes/support \
+	      ./includes/support/viterbi_768 
 
 INCLUDEPATH += . \
 	      ./ \
 	      ./src \
+	      ./service-description \
 	      ./includes \
 	      ./includes/ofdm \
 	      ./includes/backend \
-	      ./includes/backend/viterbi_768 \
 	      ./includes/backend/audio \
 	      ./includes/backend/data \
+	      ./includes/backend/data/mot \
 	      ./includes/output \
-	      ./includes/various \
+	      ./includes/support \
+	      ./includes/support/viterbi_768 \
 	      ./devices \
 	      ./devices/rawfiles \
 	      ./devices/wavfiles 
@@ -60,20 +66,19 @@ INCLUDEPATH += . \
 # Input
 HEADERS += ./radio.h \
 	   ./dab-processor.h \
-	   ./service-list.h \
-	   ./service-display.h \
+	   ./service-description/service-descriptor.h \
+	   ./service-description/audio-descriptor.h \
 	   ./includes/dab-constants.h \
 	   ./includes/country-codes.h \
+	   ./includes/ofdm/timesyncer.h \
 	   ./includes/ofdm/sample-reader.h \
 	   ./includes/ofdm/ofdm-decoder.h \
 	   ./includes/ofdm/phasereference.h \
 	   ./includes/ofdm/phasetable.h \
 	   ./includes/ofdm/freq-interleaver.h \
-#	   ./includes/backend/viterbi.h \
-	   ./includes/backend/viterbi_768/viterbi-768.h \
-	   ./includes/backend/fic-handler.h \
+	   ./includes/ofdm/fic-handler.h \
+	   ./includes/ofdm/fib-processor.h  \
 	   ./includes/backend/msc-handler.h \
-	   ./includes/backend/fib-processor.h  \
 	   ./includes/backend/galois.h \
 	   ./includes/backend/reed-solomon.h \
 	   ./includes/backend/rscodec.h \
@@ -89,9 +94,9 @@ HEADERS += ./radio.h \
 	   ./includes/backend/data/data-processor.h \
 	   ./includes/backend/data/pad-handler.h \
 	   ./includes/backend/data/virtual-datahandler.h \
-	   ./includes/backend/data/mot-handler.h \
-	   ./includes/backend/data/mot-dir.h \
-	   ./includes/backend/data/mot-object.h \
+	   ./includes/backend/data/mot/mot-handler.h \
+           ./includes/backend/data/mot/mot-object.h \
+           ./includes/backend/data/mot/mot-dir.h \
 	   ./includes/backend/protection.h \
 	   ./includes/backend/eep-protection.h \
 	   ./includes/backend/uep-protection.h \
@@ -99,36 +104,38 @@ HEADERS += ./radio.h \
 	   ./includes/output/audio-base.h \
 	   ./includes/output/newconverter.h \
 	   ./includes/output/audiosink.h \
-           ./includes/various/fft-handler.h \
-	   ./includes/various/ringbuffer.h \
-	   ./includes/various/Xtan2.h \
-	   ./includes/various/dab-params.h \
-	   ./includes/various/band-handler.h \
-	   ./includes/various/text-mapper.h \
+	   ./includes/support/viterbi_768/viterbi-768.h \
+           ./includes/support/fft-handler.h \
+	   ./includes/support/ringbuffer.h \
+	   ./includes/support/Xtan2.h \
+	   ./includes/support/dab-params.h \
+	   ./includes/support/band-handler.h \
+	   ./includes/support/text-mapper.h \
+	   ./includes/support/dab_tables.h \
 	   ./devices/virtual-input.h \
 	   ./devices/rawfiles/rawfiles.h \
            ./devices/wavfiles/wavfiles.h
 
-FORMS	+= ./devices/filereader-widget.ui 
+FORMS	+= ./devices/filereader-widget.ui \
+	   ./forms/audio-description.ui
 
 SOURCES += ./main.cpp \
 	   ./radio.cpp \
 	   ./dab-processor.cpp \
-	   ./service-list.cpp \
-	   ./service-display.cpp \
+	   ./service-description/service-descriptor.cpp \
+	   ./service-description/audio-descriptor.cpp \
+	   ./src/ofdm/timesyncer.cpp \
 	   ./src/ofdm/sample-reader.cpp \
 	   ./src/ofdm/ofdm-decoder.cpp \
 	   ./src/ofdm/phasereference.cpp \
 	   ./src/ofdm/phasetable.cpp \
 	   ./src/ofdm/freq-interleaver.cpp \
-#	   ./src/backend/viterbi.cpp \
-	   ./src/backend/viterbi_768/viterbi-768.cpp \
-	   ./src/backend/fic-handler.cpp \
+	   ./src/ofdm/fic-handler.cpp \
+	   ./src/ofdm/fib-processor.cpp  \
 	   ./src/backend/msc-handler.cpp \
 	   ./src/backend/protection.cpp \
 	   ./src/backend/eep-protection.cpp \
 	   ./src/backend/uep-protection.cpp \
-	   ./src/backend/fib-processor.cpp  \
 	   ./src/backend/galois.cpp \
 	   ./src/backend/reed-solomon.cpp \
 	   ./src/backend/rscodec.cpp \
@@ -145,18 +152,19 @@ SOURCES += ./main.cpp \
 	   ./src/backend/data/pad-handler.cpp \
 	   ./src/backend/data/data-processor.cpp \
 	   ./src/backend/data/virtual-datahandler.cpp \
-	   ./src/backend/data/mot-handler.cpp \
-	   ./src/backend/data/mot-dir.cpp \
-	   ./src/backend/data/mot-object.cpp \
-#	   ./src/output/fir-filters.cpp \
+	   ./src/backend/data/mot/mot-handler.cpp \
+           ./src/backend/data/mot/mot-object.cpp \
+           ./src/backend/data/mot/mot-dir.cpp \
 	   ./src/output/audio-base.cpp \
 	   ./src/output/newconverter.cpp \
 	   ./src/output/audiosink.cpp \
-           ./src/various/fft-handler.cpp \
-	   ./src/various/Xtan2.cpp \
-	   ./src/various/dab-params.cpp \
-	   ./src/various/band-handler.cpp \
-	   ./src/various/text-mapper.cpp \
+	   ./src/support/viterbi_768/viterbi-768.cpp \
+           ./src/support/fft-handler.cpp \
+	   ./src/support/Xtan2.cpp \
+	   ./src/support/dab-params.cpp \
+	   ./src/support/band-handler.cpp \
+	   ./src/support/text-mapper.cpp \
+	   ./src/support/dab_tables.cpp \
 	   ./devices/virtual-input.cpp \
 	   ./devices/rawfiles/rawfiles.cpp \
            ./devices/wavfiles/wavfiles.cpp
@@ -346,8 +354,8 @@ NEON_RPI2	{
 	DEFINES		+= NEON_AVAILABLE
 	QMAKE_CFLAGS	+=  -mcpu=cortex-a7 -mfloat-abi=hard -mfpu=neon-vfpv4  
 	QMAKE_CXXFLAGS	+=  -mcpu=cortex-a7 -mfloat-abi=hard -mfpu=neon-vfpv4  
-	HEADERS		+= ./src/backend/viterbi_768/spiral-neon.h
-	SOURCES		+= ./src/backend/viterbi_768/spiral-neon.c
+	HEADERS		+= ./src/support/viterbi_768/spiral-neon.h
+	SOURCES		+= ./src/support/viterbi_768/spiral-neon.c
 }
 
 # for RPI3 use:
@@ -355,18 +363,18 @@ NEON_RPI3	{
 	DEFINES		+= NEON_AVAILABLE
 #	QMAKE_CFLAGS	+=  -mcpu=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8 -mneon-for-64bits
 #	QMAKE_CXXFLAGS	+=  -mcpu=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8 -mneon-for-64bits
-	HEADERS		+= ./src/backend/viterbi_768/spiral-neon.h
-	SOURCES		+= ./src/backend/viterbi_768/spiral-neon.c
+	HEADERS		+= ./src/support/viterbi_768/spiral-neon.h
+	SOURCES		+= ./src/support/viterbi_768/spiral-neon.c
 }
 
 SSE	{
 	DEFINES		+= SSE_AVAILABLE
-	HEADERS		+= ./src/backend/viterbi_768/spiral-sse.h
-	SOURCES		+= ./src/backend/viterbi_768/spiral-sse.c
+	HEADERS		+= ./src/support/viterbi_768/spiral-sse.h
+	SOURCES		+= ./src/support/viterbi_768/spiral-sse.c
 }
 
 NO_SSE	{
-	HEADERS		+= ./src/backend/viterbi_768/spiral-no-sse.h
-	SOURCES		+= ./src/backend/viterbi_768/spiral-no-sse.c
+	HEADERS		+= ./src/support/viterbi_768/spiral-no-sse.h
+	SOURCES		+= ./src/support/viterbi_768/spiral-no-sse.c
 }
 

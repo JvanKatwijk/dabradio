@@ -32,20 +32,16 @@
 
 	phaseReference::phaseReference (RadioInterface *mr,
 	                                uint8_t		dabMode,
-#ifdef	IMPULSE_RESPONSE
-	                                RingBuffer<float> *b,
-#endif
 	                                int16_t		threshold,
-	                                int16_t		diff_length):
+	                                int16_t		diff_length,
+	                                RingBuffer<float> *b):
 	                                     phaseTable (dabMode),
 	                                     params (dabMode),
 	                                     my_fftHandler (dabMode) {
 int32_t	i;
 float	Phi_k;
 
-#ifdef	IMPULSE_RESPONSE
 	this	-> response	= b;
-#endif
 	this	-> threshold	= threshold;
 	this	-> diff_length	= diff_length;
 	this	-> T_u		= params. get_T_u ();
@@ -73,10 +69,9 @@ float	Phi_k;
 	for (i = 1; i <= diff_length; i ++) 
 	   phaseDifferences [i - 1] = abs (arg (refTable [(T_u + i) % T_u] *
                                  conj (refTable [(T_u + i + 1) % T_u])));
-#ifdef	IMPULSE_RESPONSE
+
 	connect (this, SIGNAL (showImpulse (int)),
 	         mr,   SLOT   (showImpulse (int)));
-#endif
 }
 
 	phaseReference::~phaseReference (void) {
@@ -120,13 +115,13 @@ float	lbuf [T_u];
 	   }
 	}
 
-#ifdef	IMPULSE_RESPONSE
-	if (++displayCounter > framesperSecond / 4) {
-	   response	-> putDataIntoBuffer (lbuf, T_u);
-	   showImpulse (T_u);
-	   displayCounter	= 0;
+	if (response != NULL) {
+	   if (++displayCounter > framesperSecond / 4) {
+	      response	-> putDataIntoBuffer (lbuf, T_u);
+	      showImpulse (T_u);
+	      displayCounter	= 0;
+	   }
 	}
-#endif
 /**
   *	that gives us a basis for defining the actual threshold value
   */
