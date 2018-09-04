@@ -257,7 +257,8 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
 
        set (${objectName}_UIS
                 ${${objectName}_UIS} ./forms/dabradio.ui
-                                     ./forms/audio-description.ui)
+                                     ./forms/audio-description.ui
+	                             ./devices/filereader-widget.ui)
 
 	set (${objectName}_MOCS
 	        ${${objectName}_MOCS} ./radio.h)
