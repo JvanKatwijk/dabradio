@@ -171,6 +171,7 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
              ./includes/output/fir-filters.h
              ./includes/output/audio-base.h
              ./includes/output/newconverter.h
+	     ./includes/output/audiosink.h
              ./includes/support/viterbi_768/viterbi-768.h
              ./includes/support/fft-handler.h
              ./includes/support/ringbuffer.h
@@ -223,6 +224,7 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
              ./src/output/audio-base.cpp
              ./src/output/newconverter.cpp
              ./src/output/fir-filters.cpp
+	     ./src/output/audiosink.cpp
              ./src/support/fft-handler.cpp
              ./src/support/Xtan2.cpp
              ./src/support/dab-params.cpp
@@ -253,6 +255,7 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
              ./includes/backend/data/mot/mot-object.h
              ./includes/backend/data/mot/mot-dir.h
              ./includes/backend/data/data-processor.h
+	     ./includes/output/audiosink.h
 	)
 
        set (${objectName}_UIS
