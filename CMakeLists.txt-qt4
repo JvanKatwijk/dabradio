@@ -205,7 +205,6 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
              ./src/protection/uep-protection.cpp
              ./src/backend/firecode-checker.cpp
              ./src/backend/frame-processor.cpp
-             ./src/backend/protTables.cpp
              ./src/backend/charsets.cpp
              ./src/backend/galois.cpp
              ./src/backend/reed-solomon.cpp
