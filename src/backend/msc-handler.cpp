@@ -23,9 +23,7 @@
 #include	"dab-constants.h"
 #include	"radio.h"
 #include	"msc-handler.h"
-#include	"virtual-backend.h"
-#include	"audio-backend.h"
-#include	"data-backend.h"
+#include	"backend.h"
 #include	"dab-params.h"
 //
 //	Interface program for processing the MSC.
@@ -47,7 +45,6 @@ static int cifTable [] = {18, 72, 0, 36};
 	myRadioInterface	= mr;
 	this	-> picturesPath	= picturesPath;
 	cifVector. resize (55296);
-	theBackends. push_back (new virtualBackend (0, 0));
 	BitsperBlock		= 2 * params. get_carriers ();
 	nrBlocks		= params. get_L ();
 
@@ -174,30 +171,20 @@ void	mscHandler::stop	(void) {
 //	so, a little bit of locking seems wise while
 //	the actual changing of the settings is done in the
 //	thread executing process_mscBlock
-void	mscHandler::set_audioChannel (audiodata *d,
-	                              RingBuffer<int16_t> *audioBuffer) {
+void	mscHandler::set_Channel (descriptorType *d,
+	                              RingBuffer<int16_t> *audioBuffer,
+	                              RingBuffer<uint8_t>* dataBuffer) {
 	locker. lock ();
 //
-//	we could assert here that theBackend == nullptr
-	theBackends. push_back (new audioBackend (myRadioInterface,
-	                                          d,
-	                                          audioBuffer,
-	                                          picturesPath));
+	theBackends. push_back (new Backend (myRadioInterface,
+	                                     d,
+	                                     audioBuffer,
+	                                     dataBuffer,
+	                                     picturesPath));
 	work_to_be_done. store (true);
 	locker. unlock ();
 }
 //
-void	mscHandler::set_dataChannel (packetdata	*d,
-	                             RingBuffer<uint8_t> *dataBuffer) {
-	locker. lock ();
-	theBackends. push_back (new dataBackend (myRadioInterface,
-	                                         d,
-	                                         dataBuffer,
-	                                         picturesPath));
-	work_to_be_done. store (true);
-	locker. unlock ();
-}
-
 //
 //	add blocks. First is (should be) block 4, last is (should be) 
 //	nrBlocks -1.
@@ -227,8 +214,8 @@ int16_t	i;
 //	does the work in a separate thread.
 	locker. lock ();
 	for (auto const& b: theBackends) {
-	   int16_t startAddr	= b -> startAddr ();
-	   int16_t Length	= b -> Length    (); 
+	   int16_t startAddr	= b -> startAddr;
+	   int16_t Length	= b -> Length; 
 	   if (Length > 0) {		// Length = 0? virtual Backend
 	      int16_t temp [Length * CUSize];
 	      memcpy (temp, &cifVector [startAddr * CUSize],

@@ -27,6 +27,7 @@ DEPENDPATH += . \
 	      ./service-description \
 	      ./includes \
 	      ./src/ofdm \
+	      ./src/protection \
 	      ./src/backend \
 	      ./src/backend/audio \
 	      ./src/backend/data \
@@ -51,6 +52,7 @@ INCLUDEPATH += . \
 	      ./src \
 	      ./service-description \
 	      ./includes \
+	      ./includes/protection \
 	      ./includes/ofdm \
 	      ./includes/backend \
 	      ./includes/backend/audio \
@@ -78,6 +80,10 @@ HEADERS += ./radio.h \
 	   ./includes/ofdm/freq-interleaver.h \
 	   ./includes/ofdm/fic-handler.h \
 	   ./includes/ofdm/fib-processor.h  \
+	   ./includes/protection/protTables.h \
+	   ./includes/protection/protection.h \
+           ./includes/protection/eep-protection.h \
+           ./includes/protection/uep-protection.h \
 	   ./includes/backend/msc-handler.h \
 	   ./includes/backend/galois.h \
 	   ./includes/backend/reed-solomon.h \
@@ -85,9 +91,9 @@ HEADERS += ./radio.h \
 	   ./includes/backend/charsets.h \
 	   ./includes/backend/firecode-checker.h \
 	   ./includes/backend/frame-processor.h \
-	   ./includes/backend/virtual-backend.h \
-	   ./includes/backend/audio-backend.h \
-	   ./includes/backend/data-backend.h \
+	   ./includes/backend/backend.h \
+           ./includes/backend/backend-driver.h \
+           ./includes/backend/backend-deconvolver.h \
 	   ./includes/backend/audio/mp2processor.h \
 	   ./includes/backend/audio/mp4processor.h \
 	   ./includes/backend/audio/faad-decoder.h \
@@ -97,9 +103,6 @@ HEADERS += ./radio.h \
 	   ./includes/backend/data/mot/mot-handler.h \
            ./includes/backend/data/mot/mot-object.h \
            ./includes/backend/data/mot/mot-dir.h \
-	   ./includes/backend/protection.h \
-	   ./includes/backend/eep-protection.h \
-	   ./includes/backend/uep-protection.h \
 #	   ./includes/output/fir-filters.h \
 	   ./includes/output/audio-base.h \
 	   ./includes/output/newconverter.h \
@@ -132,20 +135,20 @@ SOURCES += ./main.cpp \
 	   ./src/ofdm/freq-interleaver.cpp \
 	   ./src/ofdm/fic-handler.cpp \
 	   ./src/ofdm/fib-processor.cpp  \
+	   ./src/protection/protTables.cpp \
+           ./src/protection/protection.cpp \
+           ./src/protection/eep-protection.cpp \
+           ./src/protection/uep-protection.cpp \
 	   ./src/backend/msc-handler.cpp \
-	   ./src/backend/protection.cpp \
-	   ./src/backend/eep-protection.cpp \
-	   ./src/backend/uep-protection.cpp \
 	   ./src/backend/galois.cpp \
 	   ./src/backend/reed-solomon.cpp \
 	   ./src/backend/rscodec.cpp \
 	   ./src/backend/charsets.cpp \
 	   ./src/backend/firecode-checker.cpp \
 	   ./src/backend/frame-processor.cpp \
-	   ./src/backend/protTables.cpp \
-	   ./src/backend/virtual-backend.cpp \
-	   ./src/backend/audio-backend.cpp \
-	   ./src/backend/data-backend.cpp \
+	   ./src/backend/backend.cpp \
+           ./src/backend/backend-driver.cpp \
+           ./src/backend/backend-deconvolver.cpp \
 	   ./src/backend/audio/mp2processor.cpp \
 	   ./src/backend/audio/mp4processor.cpp \
 	   ./src/backend/audio/faad-decoder.cpp \
@@ -204,7 +207,7 @@ LIBS		+= -lfaad
 CONFIG		+= dabstick
 CONFIG		+= sdrplay
 CONFIG		+= airspy
-#CONFIG		+= hackrf	# does not work - yet
+CONFIG		+= hackrf	# does not work - yet
 #if you want to listen remote, uncomment
 #CONFIG		+= tcp-streamer		# use for remote listening
 #otherwise, if you want to use the default qt way of soud out
@@ -214,7 +217,6 @@ CONFIG		+= airspy
 #for the raspberry you definitely want this one
 #when this one is enabled, load is spread over different threads
 DEFINES	+= __THREADED_BACKEND
-#DEFINES	+= __THREADED_DECODING
 
 #and this one is experimental
 DEFINES		+= PRESET_NAME
@@ -223,8 +225,8 @@ DEFINES		+= PRESET_NAME
 #NO_SSE is always safe
 #CONFIG	+= NEON_RPI2
 #CONFIG	+= NEON_RPI3
-#CONFIG	+= SSE
-CONFIG	+= NO_SSE
+CONFIG	+= SSE
+#CONFIG	+= NO_SSE
 }
 #
 # an attempt to have it run under W32 through cross compilation
@@ -273,8 +275,6 @@ CONFIG		+= NO_SSE
 #for the raspberry you definitely want this one
 #when this one is enabled, load is spread over different threads
 DEFINES	+= __THREADED_BACKEND
-#DEFINES	+= __THREADED_DECODING
-
 
 #and this one is experimental
 # DEFINES		+= PRESET_NAME

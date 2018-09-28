@@ -64,7 +64,7 @@ using namespace std;
 #define	MHz(x)		(KHz (x) * 1000)
 #define	mHz(x)		(kHz (x) * 1000)
 
-#define	CURRENT_VERSION	"1.0 alpha"
+#define	CURRENT_VERSION	"1.1"
 
 #define		DAB		0100
 #define		DAB_PLUS	0101
@@ -122,10 +122,9 @@ float	im	= imag (z);
 #define		BAND_III	0100
 #define		L_BAND		0101
 
-//
-//	for service handling we define
-class packetdata {
+class	descriptorType {
 public:
+	uint8_t	type;
 	bool	defined;
 	QString	serviceName;
 	int32_t	serviceId;
@@ -133,37 +132,40 @@ public:
 	int16_t	startAddr;
 	bool	shortForm;
 	int16_t	protLevel;
-	int16_t DSCTy;
 	int16_t	length;
 	int16_t	bitRate;
+public:
+		descriptorType	(void) {
+	defined		= false;
+	serviceName	= "";
+	}
+virtual		~descriptorType	(void) {}
+};
+
+//	for service handling we define
+class packetdata: public descriptorType {
+public:
+	int16_t DSCTy;
 	int16_t	FEC_scheme;
 	int16_t	DGflag;
 	int16_t	appType;
 	int16_t	compnr;
 	int16_t	packetAddress;
 	packetdata (void) {
-	   serviceName	= "";
-	   defined	= false;
-	}
-	~packetdata (void) {
+	   type	= PACKET_SERVICE;
 	}
 };
 
-typedef	struct {
-	bool	defined;
-	QString serviceName;
-	int32_t	serviceId;
-	int16_t	subchId;
-	int16_t	startAddr;
-	bool	shortForm;
-	int16_t	protLevel;
-	int16_t	length;
-	int16_t	bitRate;
+class audiodata: public descriptorType {
+public:
 	int16_t	ASCTy;
 	int16_t	language;
 	int16_t	programType;
 	int16_t	compnr;
-} audiodata;
+	audiodata (void) {
+	   type	= AUDIO_SERVICE;
+	}
+};
 
 //	just some locals
 //

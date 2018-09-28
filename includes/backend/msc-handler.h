@@ -40,7 +40,7 @@
 #include        "freq-interleaver.h"
 
 class	RadioInterface;
-class	virtualBackend;
+class	Backend;
 
 class mscHandler: public QThread  {
 public:
@@ -50,9 +50,8 @@ public:
 			~mscHandler		(void);
 	void		processBlock_0		(std::complex<float> *);
 	void		process_Msc		(std::complex<float> *, int);
-	void		set_audioChannel	(audiodata *,
-	                                           RingBuffer<int16_t> *);
-	void		set_dataChannel         (packetdata *,
+	void		set_Channel	        (descriptorType *,
+	                                           RingBuffer<int16_t> *,
 	                                           RingBuffer<uint8_t> *);
 //
 //	This function should be called beore issuing a request
@@ -75,7 +74,7 @@ private:
         interLeaver     myMapper;
 	QMutex		locker;
 	bool		audioService;
-	std::vector<virtualBackend *>theBackends;
+	std::vector<Backend *>theBackends;
 	std::vector<int16_t> cifVector;
 	int16_t		cifCount;
 	int16_t		blkCount;

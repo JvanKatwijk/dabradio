@@ -348,7 +348,7 @@ void	dabProcessor::reset_msc (void) {
 void	dabProcessor::set_audioChannel (audiodata *d,
 	                                RingBuffer<int16_t> *b,
 	                                RingBuffer<uint8_t> *db) {
-	my_mscHandler. set_audioChannel (d, b);
+	my_mscHandler. set_Channel (d, b, (RingBuffer<uint8_t> *)nullptr);
 	for (int i = 1; i < 10; i ++) {
            packetdata pd;
            dataforDataService (d -> serviceName, &pd, i);
@@ -361,7 +361,7 @@ void	dabProcessor::set_audioChannel (audiodata *d,
 
 void	dabProcessor::set_dataChannel (packetdata *d,
 	                                      RingBuffer<uint8_t> *b) {
-	my_mscHandler. set_dataChannel (d, b);
+	my_mscHandler. set_Channel (d, (RingBuffer<int16_t> *)nullptr, b);
 }
 
 QString dabProcessor::get_ensembleName	(void) {
