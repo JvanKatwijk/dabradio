@@ -298,7 +298,7 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
 	   )
 
 	   set (${objectName}_MOCS
-	        ${${objectName}_MOCS
+	        ${${objectName}_MOCS}
 	        ./devices/sdrplay-handler/sdrplay-handler.h
 	   )
 
