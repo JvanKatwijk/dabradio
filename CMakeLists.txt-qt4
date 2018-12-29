@@ -325,7 +325,7 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
 	   )
 
 	   set (${objectName}_MOCS
-	        ${${objectName}_MOCS
+	        ${${objectName}_MOCS}
 	        ./devices/airspy-handler/airspy-handler.h
 	   )
 
@@ -349,7 +349,7 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
 	   )
 
 	   set (${objectName}_MOCS
-	        ${${objectName}_MOCS
+	        ${${objectName}_MOCS}
 	        ./devices/rtlsdr-handler/rtlsdr-handler.h
 	   )
 
