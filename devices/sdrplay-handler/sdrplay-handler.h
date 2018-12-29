@@ -23,10 +23,12 @@
 #define	__SDRPLAY_HANDLER__
 
 #include	<QSettings>
+#include	<QCheckBox>
+#include	<QSpinBox>
 #include	<atomic>
 #include	"dab-constants.h"
 #include	"ringbuffer.h"
-#include	"virtual-input.h"
+#include	"device-handler.h"
 #include	"mirsdrapi-rsp.h"
 
 typedef void (*mir_sdr_StreamCallback_t)(int16_t	*xi,
@@ -85,28 +87,32 @@ typedef mir_sdr_ErrT (*pfn_mir_sdr_ReleaseDeviceIdx) (unsigned int);
 
 
 ///////////////////////////////////////////////////////////////////////////
-class	sdrplayHandler: public virtualInput {
+class	sdrplayHandler: public deviceHandler {
+Q_OBJECT
 public:
-			sdrplayHandler		(QSettings *);
+			sdrplayHandler		(QSettings *,
+	                                         QSpinBox *,
+	                                         QSpinBox *,
+	                                         QCheckBox *);
 			~sdrplayHandler		(void);
-	void		setVFOFrequency		(int32_t);
-	int32_t		getVFOFrequency		(void);
-	int32_t		defaultFrequency	(void);
 
-	bool		restartReader		(void);
+	bool		restartReader		(int32_t);
 	void		stopReader		(void);
 	int32_t		getSamples		(std::complex<float> *,
 	                                                          int32_t);
 	int32_t		Samples			(void);
 	void		resetBuffer		(void);
-	int16_t		maxGain			(void);
 	int16_t		bitDepth		(void);
-	void		set_Gain		(int);
 //
 //	The buffer should be visible by the callback function
 	RingBuffer<std::complex<float>>	*_I_Buffer;
 	float		denominator;
 private:
+	QSettings	*sdrplaySettings;
+	QSpinBox	*GRdBSelector;
+	QSpinBox	*lnaGainSetting;
+	QCheckBox	*agcControl;
+	QString		errorCodes	(mir_sdr_ErrT);
 	pfn_mir_sdr_StreamInit	my_mir_sdr_StreamInit;
 	pfn_mir_sdr_Reinit	my_mir_sdr_Reinit;
 	pfn_mir_sdr_StreamUninit	my_mir_sdr_StreamUninit;
@@ -143,14 +149,14 @@ private:
 	int16_t		deviceIndex;
 	bool		loadFunctions	(void);
 	int32_t		inputRate;
-	int32_t		vfoFrequency;
-	int		gainValue;
-	int		lnaGainRange;
-	int		lnaState;
 	bool		libraryLoaded;
 	std::atomic<bool>	running;
 	HINSTANCE	Handle;
 	int16_t		nrBits;
+private slots:
+	void		set_ifgainReduction	(int);
+	void		set_lnagainReduction	(int);
+	void		set_agcControl		(int);
 };
 #endif
 

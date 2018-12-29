@@ -79,13 +79,18 @@ virtual void	run (void) {
 };
 //
 //	Our wrapper is a simple classs
-	rtlsdrHandler::rtlsdrHandler (QSettings *rtlsdrSettings) {
+	rtlsdrHandler::rtlsdrHandler (QSettings *rtlsdrSettings,
+	                              QSpinBox	*ifgainSelector,
+	                              QCheckBox	*agcControl) {
 int16_t	deviceCount;
 int32_t	r;
 int	i, k;
 
-	gainValue	= rtlsdrSettings -> value ("gain", 70). toInt ();
-        autogainValue   = rtlsdrSettings -> value ("autogain", 0). toInt ();
+	this	-> rtlsdrSettings	= rtlsdrSettings;
+	this	-> ifgainSelector	= ifgainSelector;
+	ifgainSelector	-> setToolTip ("ifgain, range 1 .. 100");
+	ifgainSelector	-> setRange (1, 100);
+	this	-> agcControl		= agcControl;
 
 	inputRate		= 2048000;
 	libraryLoaded		= false;
@@ -104,7 +109,6 @@ int	i, k;
 #endif
 
 	if (Handle == NULL) {
-	   fprintf (stderr, "We could not open rtlsdr device\n if you are not waiting for that, do not worry\n");
 	   throw (20);
 	}
 
@@ -121,7 +125,6 @@ int	i, k;
 //	Ok, from here we have the library functions accessible
 	deviceCount 		= this -> rtlsdr_get_device_count ();
 	if (deviceCount == 0) {
-	   fprintf (stderr, "No devices found\n");
 #ifdef __MINGW32__
 	   FreeLibrary (Handle);
 #else
@@ -173,12 +176,27 @@ int	i, k;
 	_I_Buffer		= new RingBuffer<uint8_t>(8 * 1024 * 1024);
 //
 //	See what the saved values are and restore the GUI settings
-	rtlsdr_set_tuner_gain_mode (device, autogainValue);
-	if (autogainValue)
+	
+	rtlsdrSettings	-> beginGroup ("rtlsdrSettings");
+        int ifgain        = rtlsdrSettings -> value ("ifgain", 50). toInt ();
+        ifgainSelector	-> setValue (ifgain);
+
+        bool    agcMode = rtlsdrSettings -> value ("agcMode", 0). toInt () != 0;
+        if (agcMode) {
+           agcControl   -> setChecked (true);
+        }
+
+	rtlsdrSettings	-> endGroup ();
+	if (agcMode)
 	   rtlsdr_set_agc_mode (device, 1);
 	else
 	   rtlsdr_set_agc_mode (device, 0);
-	rtlsdr_set_tuner_gain	(device, gains [(int)(gainValue * gainsCount / 100)]);
+	rtlsdr_set_tuner_gain	(device, gains [(int)(ifgain * gainsCount / 100)]);
+	connect (ifgainSelector, SIGNAL (valueChanged (int)),
+	         this, SLOT (set_ifgain (int)));
+	connect (agcControl, SIGNAL (stateChanged (int)),
+	         this, SLOT (set_agcControl (int)));
+
 }
 
 	rtlsdrHandler::~rtlsdrHandler	(void) {
@@ -207,15 +225,11 @@ int	i, k;
 	   delete _I_Buffer;
 	if (gains != NULL)
 	   delete[] gains;
-}
 
-void	rtlsdrHandler::setVFOFrequency	(int32_t f) {
-	lastFrequency	= f;
-	(void)(this -> rtlsdr_set_center_freq (device, f));
-}
-
-int32_t	rtlsdrHandler::getVFOFrequency	(void) {
-	return (int32_t)(this -> rtlsdr_get_center_freq (device));
+	rtlsdrSettings	-> beginGroup ("rtlsdrSettings");
+        rtlsdrSettings	-> setValue ("ifgain", ifgainSelector -> value ());
+	rtlsdrSettings	-> setValue ("agcMode", agcControl -> isChecked ());
+	rtlsdrSettings	-> endGroup ();
 }
 //
 //
@@ -232,8 +246,9 @@ int32_t	r;
 
 	this -> rtlsdr_set_center_freq (device, lastFrequency);
 	workerHandle	= new dll_driver (this);
-	rtlsdr_set_agc_mode (device, autogainValue);
-	rtlsdr_set_tuner_gain (device, gains [(int)(gainValue * gainsCount / 100)]);
+	rtlsdr_set_agc_mode (device, agcControl -> isChecked ());
+	rtlsdr_set_tuner_gain (device,
+	                  gains [(int)(ifgainSelector -> value () * gainsCount / 100)]);
 	return true;
 }
 
@@ -252,22 +267,21 @@ void	rtlsdrHandler::stopReader	(void) {
 }
 //
 //	when selecting  the gain from a table, use the table value
-void	rtlsdrHandler::set_Gain	(int gain) {
-	gainValue	= gain;
-	rtlsdr_set_tuner_gain (device, gainValue * gainsCount / 1);
+void	rtlsdrHandler::set_ifgain (int gain) {
+	rtlsdr_set_tuner_gain (device,
+	                        gain * gainsCount / 100);
 }
 //
-void	rtlsdrHandler::set_autoGain	(bool autogainValue) {
-	this -> autogainValue = autogainValue;
-	rtlsdr_set_agc_mode (device, autogainValue);
+void	rtlsdrHandler::set_agcControl	(int dummy) {
+	rtlsdr_set_agc_mode (device, agcControl -> isChecked ());
 	rtlsdr_set_tuner_gain (device,
-	                       gains [(int)(gainValue * gainsCount / 100)]);
+	             gains [(int)(ifgainSelector -> value () * gainsCount / 100)]);
 }
 //
 //
 //	The brave old getSamples. For the dab stick, we get
 //	size samples: still in I/Q pairs, but we have to convert the data from
-//	uint8_t to DSPCOMPLEX *
+//	uint8_t to std::complex<float> *
 int32_t	rtlsdrHandler::getSamples (std::complex<float> *V, int32_t size) { 
 int32_t	amount, i;
 uint8_t	*tempBuffer = (uint8_t *)alloca (2 * size * sizeof (uint8_t));

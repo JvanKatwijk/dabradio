@@ -37,7 +37,7 @@
 #include	"ofdm-decoder.h"
 #include	"fic-handler.h"
 #include	"msc-handler.h"
-#include	"virtual-input.h"
+#include	"device-handler.h"
 #include	"ringbuffer.h"
 //
 
@@ -48,7 +48,7 @@ class dabProcessor: public QThread {
 Q_OBJECT
 public:
 		dabProcessor  	(RadioInterface *,
-	                         virtualInput *,
+	                         deviceHandler *,
 	                         uint8_t,
 	                         int16_t,
 	                         int16_t,
@@ -84,13 +84,13 @@ public:
         QString		get_ensembleName        (void);
 	void		clearEnsemble		(void);
 private:
-	virtualInput	*theDevice;
+	deviceHandler	*theDevice;
 	dabParams	params;
 	sampleReader	myReader;
 	RadioInterface	*myRadioInterface;
 	ficHandler	my_ficHandler;
 	mscHandler	my_mscHandler;
-
+	int32_t		frequency;
 	int16_t		attempts;
 	bool		giveSignal;
 	int32_t		T_null;

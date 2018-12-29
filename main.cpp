@@ -31,18 +31,6 @@
 #include        "dab-constants.h"
 #include        "radio.h"
 
-#ifdef	HAVE_RTLSDR
-#include	"rtlsdr-handler.h"
-#endif
-#ifdef	HAVE_SDRPLAY
-#include	"sdrplay-handler.h"
-#endif
-#ifdef	HAVE_AIRSPY
-#include	"airspy-handler.h"
-#endif
-#ifdef	HAVE_HACKRF
-#include	"hackrf-handler.h"
-#endif
 #define DEFAULT_INI     ".dabradio.ini"
 #define	SERVICE_LIST	".dabradio-stations.bin"
 
@@ -71,7 +59,6 @@ QString fileName;
 }
 
 void    	setTranslator (QString Language);
-virtualInput	*setDevice (QSettings *dabSettings);
 
 int     main (int argc, char **argv) {
 QString initFileName	= fullPathfor (QString (DEFAULT_INI), ".ini");
@@ -114,20 +101,19 @@ int     opt;
 	qDebug() << "main:" <<  "Detected system language" << locale;
 	setTranslator (locale);
 
-	theDevice	= setDevice (dabSettings);
-	if (theDevice == NULL) {
-	   fprintf (stderr, "sorry, no device found, fatal\n");
-	   exit (1);
-	}
 //	a. setWindowIcon (QIcon (":/dab-radio.ico"));
 
 	QString dabBand	= dabSettings -> value ("dabBand", "Band III"). toString ();
 	bandHandler my_bandHandler (dabBand);
-	MyRadioInterface = new RadioInterface (dabSettings,
-	                                       serviceList,
-	                                       &my_bandHandler,
-	                                       theDevice);
-	MyRadioInterface -> show ();
+	try {
+	   MyRadioInterface = new RadioInterface (dabSettings,
+	                                          serviceList,
+	                                          &my_bandHandler);
+	   MyRadioInterface -> show ();
+	} catch (int e) {
+	   fprintf (stderr, "Could not instantiate, no device\n");
+	   exit (2);
+	}
 
 #if QT_VERSION >= 0x050600
 	QGuiApplication::setAttribute (Qt::AA_EnableHighDpiScaling);
@@ -167,35 +153,3 @@ QTranslator *Translator = new QTranslator;
 	QLocale::setDefault (curLocale);
 }
 
-virtualInput	*setDevice (QSettings *dabSettings) {
-virtualInput	*inputDevice	= NULL;
-int	gain;
-///	OK, everything quiet, now let us see what to do
-#ifdef	HAVE_AIRSPY
-	try {
-	   inputDevice	= new airspyHandler (dabSettings);
-	   return inputDevice;
-	} catch (int e) {
-	   fprintf (stderr, "failing to load airspy device\n");
-	}
-#endif
-#ifdef	HAVE_SDRPLAY
-	try {
-	   inputDevice	= new sdrplayHandler (dabSettings);
-	   return inputDevice;
-	} catch (int e) {}
-#endif
-#ifdef	HAVE_RTLSDR
-	try {
-	   inputDevice	= new rtlsdrHandler (dabSettings);
-	   return inputDevice;
-	} catch (int e) {}
-#endif
-#ifdef	HAVE_HACKRF
-	try {
-	   inputDevice	= new hackrfHandler (dabSettings);
-	   return inputDevice;
-	} catch (int e) {}
-#endif
-	return NULL;
-}

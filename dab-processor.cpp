@@ -36,7 +36,7 @@
 
 #define	C_LEVEL_SIZE	50
 	dabProcessor::dabProcessor	(RadioInterface	*mr,
-	                                 virtualInput	*theDevice,
+	                                 deviceHandler	*theDevice,
 	                                 uint8_t	dabMode,
 	                                 int16_t	threshold,
 	                                 int16_t	diff_length,
@@ -93,8 +93,7 @@ int32_t	i;
 }
 
 void	dabProcessor::start (int frequency, bool giveSignal) {
-	theDevice	-> restartReader ();
-	theDevice	-> setVFOFrequency (frequency);
+	this		-> frequency = frequency;
 	this		-> giveSignal = giveSignal;
 	this -> QThread::start ();
 }
@@ -119,7 +118,7 @@ timeSyncer	myTimeSyncer (&myReader);
         correctionNeeded	= true;
 	attempts	= 0;
         theDevice  -> resetBuffer ();
-	theDevice	-> restartReader ();
+	theDevice	-> restartReader (frequency);
 	coarseOffset	= 0;
 	fineOffset	= 0;
 	myReader. setRunning (true);
@@ -290,7 +289,6 @@ void	dabProcessor:: reset	(void) {
 
 void	dabProcessor::stop	(void) {
 	myReader. setRunning (false);
-	theDevice	-> restartReader ();
 	while (isRunning ())
 	   usleep (1000);
 	theDevice	-> stopReader ();

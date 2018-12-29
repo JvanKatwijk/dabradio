@@ -35,12 +35,7 @@ Introduction
 to avoid even more "ifdef"s in the code, it was decided to
 maintain a GitHub repository for both of them.
 
-The Qt-free version, the "command line only" version, is named dab-cmdline, and is built around a library that does the DAB decoding. It has its own repository on Github.
-
-Next to these C++ based versions, a version in Java was developed, it has its own repository on Github and a GUI that is similar to the one for
-**dabradio**.
-
-A new feature is that
+A feature specific to this implementation is that,
 rather than selecting a channel, the software maintains a list of
 channels that can be received. This list is maintained
 between program invocations,
@@ -49,7 +44,7 @@ Of course, the first time the program is started (or on a reset),
 all channels in the given band are listened to to see whether or not
 a DAB signal can be detected. If so, the channel is recorded.
 
-The GUI does not provide buttons to select the Mode or the Band. Defaults are Mode 1 and the VHF Band III. In the ".ini" file
+The GUI does *not* provide buttons to select the Mode or the Band. Defaults are Mode 1 and the VHF Band III. In the ".ini" file
 (a file .dabradio.ini in the home directory of the user) the Mode can be set as well as the band.
 
 The services are presented in a separate widget, for each service the
@@ -119,16 +114,18 @@ the RPI 2/3 running under Stretch, THE FOLLOWING COMMANDS ARE IN A SCRIPT: build
 
   a) Assuming you want to use a dabstick (also known as rtlsdr) as device, fetch a version of the library for the dabstick
   ```
-  wget http://sm5bsz.com/linuxdsp/hware/rtlsdr/rtl-sdr-linrad4.tbz
-  tar xvfj rtl-sdr-linrad4.tbz 
-  cd rtl-sdr-linrad4
-  sudo autoconf
-  sudo autoreconf -i
-  ./configure --enable-driver-detach
-  make
-  sudo make install
-  sudo ldconfig
-  cd
+   git clone git://git.osmocom.org/rtl-sdr.git
+   cd rtl-sdr/
+   mkdir build
+   cd build
+   cmake ../ -DINSTALL_UDEV_RULES=ON -DDETACH_KERNEL_DRIVER=ON
+   make
+   sudo make install
+   sudo ldconfig
+   cd ..
+   rm -rf build
+   cd ..
+
   ```
    	
    b) Assuming you want to use an Airspy as device, fetch a version of the library for the Airspy	

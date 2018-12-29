@@ -29,14 +29,27 @@ const	int	EXTIO_NS	=  8192;
 static
 const	int	EXTIO_BASE_TYPE_SIZE = sizeof (float);
 
-	airspyHandler::airspyHandler (QSettings *airspySettings) {
+	airspyHandler::airspyHandler (QSettings *airspySettings,
+	                              QSpinBox	*ifgainSelector,
+	                              QCheckBox	*agcControl) {
 int	result, i;
 int	distance	= 10000000;
 std::vector <uint32_t> sampleRates;
 uint32_t samplerateCount;
 
-	gainValue		= airspySettings -> value ("gain", 90). toInt ();
-	autogainValue		= airspySettings -> value ("autogain", 0). toInt ();
+	this	-> airspySettings	= airspySettings;
+	this	-> ifgainSelector	= ifgainSelector;
+	ifgainSelector	-> setRange (1, 21);
+	ifgainSelector	-> setToolTip ("gain setting, range 1 .. 21");
+	this	-> agcControl		= agcControl;
+	airspySettings	-> beginGroup ("airspySettings");
+	ifgainSelector	-> setValue (
+	                      airspySettings -> value ("ifgain", 19). toInt ());
+	int agcMode		=
+	                      airspySettings -> value ("agcMode", 0). toInt ();
+	if (agcMode)
+	   agcControl	-> setChecked (true);
+	airspySettings	-> endGroup ();
 	filter			= NULL;
 	device			= 0;
 	serialNumber		= 0;
@@ -135,7 +148,7 @@ uint32_t samplerateCount;
 	}
 
 	filtering 	= 0;
-	int filterDegree = 9;;
+	int filterDegree = 9;
 //
 //	if we apply filtering it is using a symmetric lowpass filter
 	filter		= new airspyFilter (filterDegree,
@@ -155,8 +168,14 @@ uint32_t samplerateCount;
 
 	theBuffer	= new RingBuffer<std::complex<float>>
 	                                                    (256 * 1024);
-	set_Gain	(gainValue);
-	set_autoGain (autogainValue != 0);
+	my_airspy_set_sensitivity_gain (device,
+	                    ifgainSelector -> value ());
+
+	my_airspy_set_mixer_agc (device, agcControl -> isChecked () ? 1 : 0);
+	connect (ifgainSelector, SIGNAL (valueChanged (int)),
+	         this, SLOT (set_ifgain (int)));
+	connect (agcControl, SIGNAL (stateChanged (int)),
+	         this, SLOT (set_agcControl (int)));
 }
 
 	airspyHandler::~airspyHandler (void) {
@@ -173,6 +192,13 @@ uint32_t samplerateCount;
 	             my_airspy_error_name((airspy_error)result), result);
 	   }
 	}
+
+
+	airspySettings	-> beginGroup ("airspySettings");
+	airspySettings	-> setValue ("ifgain", ifgainSelector -> value ());
+	airspySettings	-> setValue ("agcMode",
+	                              agcControl -> isChecked () ? 1 : 0);
+	airspySettings	-> endGroup ();
 	if (filter	!= NULL)
 	   delete filter;
 	if (Handle == NULL) {
@@ -189,24 +215,7 @@ err:
 	   delete theBuffer;
 }
 
-void	airspyHandler::setVFOFrequency (int32_t nf) {
-int result = my_airspy_set_freq (device, lastFrequency = nf);
-
-	if (result != AIRSPY_SUCCESS) {
-	   printf ("my_airspy_set_freq() failed: %s (%d)\n",
-	            my_airspy_error_name((airspy_error)result), result);
-	}
-}
-
-int32_t	airspyHandler::getVFOFrequency (void) {
-	return lastFrequency;
-}
-
-int32_t	airspyHandler::defaultFrequency (void) {
-	return Khz (94700);
-}
-
-bool	airspyHandler::restartReader	(void) {
+bool	airspyHandler::restartReader	(int32_t frequency) {
 int	result;
 int32_t	bufSize	= EXTIO_NS * EXTIO_BASE_TYPE_SIZE * 2;
 	if (running. load ())
@@ -220,7 +229,10 @@ int32_t	bufSize	= EXTIO_NS * EXTIO_BASE_TYPE_SIZE * 2;
 	   return false;
 	}
 
-	set_Gain	(gainValue);
+
+	my_airspy_set_freq (device, frequency);
+	my_airspy_set_sensitivity_gain (device,
+	                    ifgainSelector -> value ());
 	
 	result = my_airspy_start_rx (device,
 	            (airspy_sample_block_cb_fn)callback, this);
@@ -365,10 +377,8 @@ int32_t	airspyHandler::Samples	(void) {
 	return theBuffer	-> GetRingBufferReadAvailable ();
 }
 //
-void	airspyHandler::set_Gain (int theGain) {
-int	realGain	= theGain * 21 / 100;
-int	result = my_airspy_set_sensitivity_gain (device, realGain);
-	gainValue	= theGain;
+void	airspyHandler::set_ifgain (int theGain) {
+int	result = my_airspy_set_sensitivity_gain (device, theGain);
 	if (result != AIRSPY_SUCCESS) {
 	   printf ("airspy_set_mixer_gain() failed: %s (%d)\n",
 	            my_airspy_error_name ((airspy_error)result), result);
@@ -381,10 +391,8 @@ int	result = my_airspy_set_sensitivity_gain (device, realGain);
 	0=Disable MIXER Automatic Gain Control
 	1=Enable MIXER Automatic Gain Control
 */
-void	airspyHandler::set_autoGain (bool b) {
-	mixer_agc	= b;
-
-int result = my_airspy_set_mixer_agc (device, mixer_agc ? 1 : 0);
+void	airspyHandler::set_agcControl (int b) {
+int result = my_airspy_set_mixer_agc (device, b);
 
 	if (result != AIRSPY_SUCCESS) {
 	   printf ("airspy_set_mixer_agc () failed: %s (%d)\n",

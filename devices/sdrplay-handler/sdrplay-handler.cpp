@@ -24,28 +24,35 @@
 #include	"sdrplay-handler.h"
 #include	"sdrplayselect.h"
 
-//static
-//int     RSP1_Table [] = {0, 24, 19, 43};
+static
+int     RSP1_Table [] = {0, 24, 19, 43};
 //
-//static
-//int     RSP1A_Table [] = {0, 6, 12, 18, 20, 26, 32, 38, 57, 62};
+static
+int     RSP1A_Table [] = {0, 6, 12, 18, 20, 26, 32, 38, 57, 62};
 //
-//static
-//int     RSP2_Table [] = {0, 10, 15, 21, 24, 34, 39, 45, 64};
+static
+int     RSP2_Table [] = {0, 10, 15, 21, 24, 34, 39, 45, 64};
 //
-//static
-//int     RSPduo_Table [] = {0, 6, 12, 18, 20, 26, 32, 38, 57, 62};
+static
+int     RSPduo_Table [] = {0, 6, 12, 18, 20, 26, 32, 38, 57, 62};
 
 
-	sdrplayHandler::sdrplayHandler  (QSettings *sdrplaySettings) {
+	sdrplayHandler::sdrplayHandler  (QSettings *sdrplaySettings,
+	                                 QSpinBox	*GRdBSetting,
+	                                 QSpinBox	*lnaGainSetting,
+	                                 QCheckBox	*agcControl) {
 int	err;
 float	ver;
 mir_sdr_DeviceT devDesc [4];
 mir_sdr_GainValuesT gainDesc;
-sdrplaySelect	*sdrplaySelector;
 
-	gainValue               =
-	                  sdrplaySettings -> value ("gain", 40). toInt ();
+	this	-> sdrplaySettings	= sdrplaySettings;
+	this	-> GRdBSelector		= GRdBSetting;
+	GRdBSetting	-> setToolTip ("if gain reduction");
+	this	-> lnaGainSetting	= lnaGainSetting;
+	lnaGainSetting	-> setToolTip ("lna state selection");
+	this	-> agcControl		= agcControl;
+
 	this	-> inputRate		= Khz (2048);
 	_I_Buffer			= NULL;
 	libraryLoaded			= false;
@@ -55,32 +62,34 @@ HKEY APIkey;
 wchar_t APIkeyValue [256];
 ULONG APIkeyValue_length = 255;
 
-	if (RegOpenKey (HKEY_LOCAL_MACHINE,
-	                TEXT("Software\\MiricsSDR\\API"),
-	                &APIkey) != ERROR_SUCCESS) {
-	  fprintf (stderr,
-	           "failed to locate API registry entry, error = %d\n",
-	           (int)GetLastError());
-	   throw (21);
-	}
+	wchar_t *libname = (wchar_t *)L"mir_sdr_api.dll";
+        Handle  = LoadLibrary (libname);
+        if (Handle == NULL) {
+	   if (RegOpenKey (HKEY_LOCAL_MACHINE,
+	                   TEXT("Software\\MiricsSDR\\API"),
+	                   &APIkey) != ERROR_SUCCESS) {
+	      fprintf (stderr,
+	               "failed to locate API registry entry, error = %d\n",
+	               (int)GetLastError());
+	      throw (21);
+	   }
 
-	RegQueryValueEx (APIkey,
-	                 (wchar_t *)L"Install_Dir",
-	                 NULL,
-	                 NULL,
-	                 (LPBYTE)&APIkeyValue,
-	                 (LPDWORD)&APIkeyValue_length);
+	   RegQueryValueEx (APIkey,
+	                    (wchar_t *)L"Install_Dir",
+	                    NULL,
+	                    NULL,
+	                    (LPBYTE)&APIkeyValue,
+	                    (LPDWORD)&APIkeyValue_length);
 //	Ok, make explicit it is in the 64 bits section
-	wchar_t *x = wcscat (APIkeyValue, (wchar_t *)L"\\x86\\mir_sdr_api.dll");
-//	wchar_t *x = wcscat (APIkeyValue, (wchar_t *)L"\\x64\\mir_sdr_api.dll");
-//	fprintf (stderr, "Length of APIkeyValue = %d\n", APIkeyValue_length);
-//	wprintf (L"API registry entry: %s\n", APIkeyValue);
-	RegCloseKey(APIkey);
+	   wchar_t *x =
+	         wcscat (APIkeyValue, (wchar_t *)L"\\x86\\mir_sdr_api.dll");
+	   RegCloseKey(APIkey);
 
-	Handle	= LoadLibrary (x);
-	if (Handle == NULL) {
-	  fprintf (stderr, "Failed to open mir_sdr_api.dll\n");
-	  throw (22);
+	   Handle	= LoadLibrary (x);
+	   if (Handle == NULL) {
+	     fprintf (stderr, "Failed to open mir_sdr_api.dll\n");
+	     throw (22);
+	   }
 	}
 #else
 	Handle		= dlopen ("libusb-1.0.so", RTLD_NOW | RTLD_GLOBAL);
@@ -114,7 +123,6 @@ ULONG APIkeyValue_length = 255;
 	}
 
 	_I_Buffer	= new RingBuffer<std::complex<float>>(1024 * 1024);
-	vfoFrequency	= Khz (220000);
 //
 	my_mir_sdr_GetDevices (devDesc, &numofDevs, uint32_t (4));
 	if (numofDevs == 0) {
@@ -139,33 +147,47 @@ ULONG APIkeyValue_length = 255;
 //      so we can rely on a single table for the lna reductions.
 	switch (hwVersion) {
 	   case 1:              // old RSP
-	      lnaGainRange	= 4;
+	      lnaGainSetting	-> setRange (0, 3);
 	      nrBits		= 12;
 	      denominator	= 2048;
 	      break;
 	   case 2:
-	      lnaGainRange	= 9;
+	      lnaGainSetting	-> setRange (0, 8);
 	      nrBits		= 14;
 	      denominator	= 8192;
 	      break;
 	   case 3:
-	      lnaGainRange	= 10;
+	      lnaGainSetting	-> setRange (0, 9);
 	      nrBits		= 14;
 	      denominator	= 8192;
 	      break;
 	   default:			// RSP1A
-	      lnaGainRange	= 10;
-	      nrBits		= 12;
+	      lnaGainSetting	-> setRange (0, 9);
+	      nrBits		= 14;
 	      denominator	= 2048;
 	      break;
 	}
 
-	lnaState	= 2;	//default
+	sdrplaySettings         -> beginGroup ("sdrplaySettings");
+	int lnaState	= sdrplaySettings -> value ("lnaState", 3). toInt ();
+	lnaGainSetting	-> setValue (lnaState);
+
+	int GRdB	= sdrplaySettings -> value ("GRdB", 35). toInt ();
+	GRdBSelector		-> setValue (GRdB);
+
+	bool	agcMode	= sdrplaySettings -> value ("agcMode", 0). toInt () != 0;
+	sdrplaySettings		-> endGroup ();
+	if (agcMode) {
+	   agcControl	-> setChecked (true);
+	   GRdBSetting	-> hide ();
+	}
+	   
 	if (hwVersion == 2) {
 	   mir_sdr_ErrT err;
 	   err = my_mir_sdr_RSPII_AntennaControl (mir_sdr_RSPII_ANTENNA_A);
 	   if (err != mir_sdr_Success)
 	      fprintf (stderr, "error %d in setting antenna\n", err);
+	   
 	}
 
 	if (hwVersion == 3) {   // duo
@@ -175,6 +197,14 @@ ULONG APIkeyValue_length = 255;
 	}
 
 	running. store (false);
+	GRdBSetting	-> setMaximum (59);
+	GRdBSetting	-> setMinimum (20);
+	connect (GRdBSelector, SIGNAL (valueChanged (int)),
+	         this, SLOT (set_ifgainReduction (int)));
+	connect (lnaGainSetting, SIGNAL (valueChanged (int)),
+	         this, SLOT (set_lnagainReduction (int)));
+	connect (agcControl, SIGNAL (stateChanged (int)),
+	         this, SLOT (set_agcControl (int)));
 }
 
 	sdrplayHandler::~sdrplayHandler	(void) {
@@ -191,84 +221,50 @@ ULONG APIkeyValue_length = 255;
 #endif
 }
 //
-static inline
-int16_t	bankFor_sdr (int32_t freq) {
-	if (freq < 12 * MHz (1))
-	   return mir_sdr_BAND_AM_LO;
-	if (freq < 30 * MHz (1))
-	   return mir_sdr_BAND_AM_MID;
-	if (freq < 60 * MHz (1))
-	   return mir_sdr_BAND_AM_HI;
-	if (freq < 120 * MHz (1))
-	   return mir_sdr_BAND_VHF;
-	if (freq < 250 * MHz (1))
-	   return mir_sdr_BAND_3;
-	if (freq < 420 * MHz (1))
-	   return mir_sdr_BAND_X;
-	if (freq < 1000 * MHz (1))
-	   return mir_sdr_BAND_4_5;
-	if (freq < 2000 * MHz (1))
-	   return mir_sdr_BAND_L;
-	return -1;
-}
-
-int32_t	sdrplayHandler::defaultFrequency	(void) {
-	return Mhz (220);
-}
-
-void	sdrplayHandler::setVFOFrequency		(int32_t newFrequency) {
-int	gRdBSystem;
-int	samplesPerPacket;
-mir_sdr_ErrT	err;
-int	localGred	= 40;
-
-	if (bankFor_sdr (newFrequency) == -1)
-	   return;
-
-	if (!running. load ()) {
-	   vfoFrequency = newFrequency;
-	   return;
-	}
-
-	if (bankFor_sdr (newFrequency) == bankFor_sdr (vfoFrequency)) {
-	   my_mir_sdr_SetRf (double (newFrequency), 1, 0);
-	   vfoFrequency	= newFrequency;
-	   return;
-	}
 //
-//	Reinit should not occur here, all handling is in the BAND III
-	err	= my_mir_sdr_Reinit (&localGred,
-	                             double (inputRate) / Mhz (1),
-	                             double (newFrequency) / Mhz (1),
-	                             mir_sdr_BW_1_536,
-	                             mir_sdr_IF_Zero,
-	                             mir_sdr_LO_Undefined,	// LOMode
-	                             lnaState,	// LNA enable
-	                             &gRdBSystem,
-	                             true,		// agcMode
-	                             &samplesPerPacket,
-	                             mir_sdr_CHANGE_RF_FREQ);
-	if (err != mir_sdr_Success) 
-	   fprintf (stderr, "Error %d\n", err);
-	vfoFrequency = newFrequency;
+void	sdrplayHandler::set_ifgainReduction (int newGRdB) {
+mir_sdr_ErrT    err;
+int     GRdB            = GRdBSelector  -> value ();
+int     lnaState        = lnaGainSetting -> value ();
+
+        (void)newGRdB;
+
+        err     =  my_mir_sdr_RSP_SetGr (GRdB, lnaState, 1, 0);
+        if (err != mir_sdr_Success)
+           fprintf (stderr, "Error at set_ifgain %s\n",
+                            errorCodes (err). toLatin1 (). data ());
 }
 
-int32_t	sdrplayHandler::getVFOFrequency	(void) {
-	return vfoFrequency;
-}
-//
-//	In this version, the "gain" sets the lnaGain reduction
-//	for the ifgain, we use the agc
-void	sdrplayHandler::set_Gain	(int newGain) {
+void    sdrplayHandler::set_lnagainReduction (int lnaState) {
+mir_sdr_ErrT err;
 
-	lnaState	= newGain * lnaGainRange / 100;
-	my_mir_sdr_AgcControl (true, -30, 0, 0, 0, 0, lnaState);
+	if (!agcControl -> isChecked ()) {
+	   set_ifgainReduction (0);
+           return;
+        }
+
+        err     = my_mir_sdr_AgcControl (mir_sdr_AGC_100HZ,
+                                         -30, 0, 0, 0, 0, lnaState);
+        if (err != mir_sdr_Success)
+           fprintf (stderr, "Error at set_lnagainReduction %s\n",
+                               errorCodes (err). toLatin1 (). data ());
 }
 
-int16_t	sdrplayHandler::maxGain	(void) {
-	return 101;
+void    sdrplayHandler::set_agcControl (int dummy) {
+bool agcMode    = agcControl -> isChecked ();
+        my_mir_sdr_AgcControl (agcMode ? mir_sdr_AGC_100HZ :
+                                         mir_sdr_AGC_DISABLE,
+                               -30,
+                               0, 0, 0, 0, lnaGainSetting -> value ());
+        if (!agcMode) {
+           GRdBSelector         -> show ();
+           set_ifgainReduction (0);
+        }
+        else {
+           GRdBSelector         -> hide ();
+        }
 }
-//
+
 static
 void myStreamCallback (int16_t		*xi,
 	               int16_t		*xq,
@@ -309,21 +305,22 @@ void	myGainChangeCallback (uint32_t	gRdB,
 	(void)cbContext;
 }
 
-bool	sdrplayHandler::restartReader	(void) {
+bool	sdrplayHandler::restartReader	(int32_t frequency) {
 int	gRdBSystem;
 int	samplesPerPacket;
 mir_sdr_ErrT	err;
-int	localGRed	= 40;
+int     GRdB            = GRdBSelector  -> value ();
+int     lnaState        = lnaGainSetting -> value ();
 
 	if (running. load ())
 	   return true;
 
-	err	= my_mir_sdr_StreamInit (&localGRed,
+	err	= my_mir_sdr_StreamInit (&GRdB,
 	                                 double (inputRate) / MHz (1),
-	                                 double (vfoFrequency) / Mhz (1),
+	                                 double (frequency) / Mhz (1),
 	                                 mir_sdr_BW_1_536,
 	                                 mir_sdr_IF_Zero,
-	                                 lnaState,
+	                                 lnaGainSetting -> value (),
 	                                 &gRdBSystem,
 	                                 mir_sdr_USE_RSP_SET_GR,
 	                                 &samplesPerPacket,
@@ -334,7 +331,19 @@ int	localGRed	= 40;
 	   fprintf (stderr, "error code = %d\n", err);
 	   return false;
 	}
-	my_mir_sdr_AgcControl (true, -30, 0, 0, 0, 0, lnaState);
+	
+        if (agcControl -> isChecked ()) {
+           my_mir_sdr_AgcControl (mir_sdr_AGC_100HZ,
+                                  -30,
+                                  0, 0, 0, 0, lnaGainSetting -> value ());
+           GRdBSelector         -> hide ();
+        }
+	else {
+           my_mir_sdr_AgcControl (mir_sdr_AGC_DISABLE,
+                                  -30,
+                                  0, 0, 0, 0, lnaGainSetting -> value ());
+           GRdBSelector         -> show ();
+	}
 
 	err		= my_mir_sdr_SetDcMode (4, 1);
 	err		= my_mir_sdr_SetDcTrackTime (63);
@@ -552,3 +561,40 @@ bool	sdrplayHandler::loadFunctions	(void) {
 	return true;
 }
 
+
+QString	sdrplayHandler::errorCodes (mir_sdr_ErrT err) {
+	switch (err) {
+	   case mir_sdr_Success:
+	      return "success";
+	   case mir_sdr_Fail:
+	      return "Fail";
+	   case mir_sdr_InvalidParam:
+	      return "invalidParam";
+	   case mir_sdr_OutOfRange:
+	      return "OutOfRange";
+	   case mir_sdr_GainUpdateError:
+	      return "GainUpdateError";
+	   case mir_sdr_RfUpdateError:
+	      return "RfUpdateError";
+	   case mir_sdr_FsUpdateError:
+	      return "FsUpdateError";
+	   case mir_sdr_HwError:
+	      return "HwError";
+	   case mir_sdr_AliasingError:
+	      return "AliasingError";
+	   case mir_sdr_AlreadyInitialised:
+	      return "AlreadyInitialised";
+	   case mir_sdr_NotInitialised:
+	      return "NotInitialised";
+	   case mir_sdr_NotEnabled:
+	      return "NotEnabled";
+	   case mir_sdr_HwVerError:
+	      return "HwVerError";
+	   case mir_sdr_OutOfMemError:
+	      return "OutOfMemError";
+	   case mir_sdr_HwRemoved:
+	      return "HwRemoved";
+	   default:
+	      return "???";
+	}
+}

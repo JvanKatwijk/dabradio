@@ -10,9 +10,8 @@ TARGET		= dabradio-1.0
 QT		+= widgets 
 CONFIG		+= console
 QMAKE_CXXFLAGS	+= -std=c++11
-QMAKE_CFLAGS	+=  -flto -ffast-math
-QMAKE_CXXFLAGS	+=  -flto -ffast-math
-QMAKE_LFLAGS	+=  -flto
+QMAKE_CFLAGS	+=  -O3 -ffast-math
+QMAKE_CXXFLAGS	+=  -O3 -ffast-math
 #QMAKE_CFLAGS	+=  -g
 #QMAKE_CXXFLAGS	+=  -g
 #QMAKE_LFLAGS	+=  -g
@@ -115,12 +114,10 @@ HEADERS += ./radio.h \
 	   ./includes/support/band-handler.h \
 	   ./includes/support/text-mapper.h \
 	   ./includes/support/dab_tables.h \
-	   ./devices/virtual-input.h \
-	   ./devices/rawfiles/rawfiles.h \
-           ./devices/wavfiles/wavfiles.h
+	   ./devices/device-handler.h 
 
-FORMS	+= ./devices/filereader-widget.ui \
-	   ./forms/audio-description.ui
+FORMS	+= ./forms/audio-description.ui
+FORMS	+= ./forms/dabradio.ui 
 
 SOURCES += ./main.cpp \
 	   ./radio.cpp \
@@ -168,9 +165,7 @@ SOURCES += ./main.cpp \
 	   ./src/support/band-handler.cpp \
 	   ./src/support/text-mapper.cpp \
 	   ./src/support/dab_tables.cpp \
-	   ./devices/virtual-input.cpp \
-	   ./devices/rawfiles/rawfiles.cpp \
-           ./devices/wavfiles/wavfiles.cpp
+	   ./devices/device-handler.cpp
 #
 #	for unix systems this is about it. Adapt when needed for naming
 #	and locating libraries. If you do not need a device as
@@ -189,7 +184,6 @@ isEmpty(GITHASHSTRING) {
     DEFINES += GITHASH=\\\"------\\\"
 }
 
-FORMS 		+= ./forms/dabradio.ui 
 INCLUDEPATH	+= /usr/local/include
 #INCLUDEPATH	+= /usr/local/include /usr/include/qt4/qwt /usr/include/qt5/qwt /usr/include/qt4/qwt /usr/include/qwt /usr/local/qwt-6.1.4-svn/
 
@@ -207,7 +201,7 @@ LIBS		+= -lfaad
 CONFIG		+= dabstick
 CONFIG		+= sdrplay
 CONFIG		+= airspy
-CONFIG		+= hackrf	# does not work - yet
+CONFIG		+= hackrf	
 #if you want to listen remote, uncomment
 #CONFIG		+= tcp-streamer		# use for remote listening
 #otherwise, if you want to use the default qt way of soud out
@@ -268,7 +262,7 @@ FORMS 		+= ./forms/dabradio.ui
 CONFIG		+= airspy
 CONFIG		+= dabstick
 CONFIG		+= sdrplay
-
+CONFIG		+= hackrf
 CONFIG		+= NO_SSE
 
 
@@ -325,8 +319,6 @@ hackrf {
         INCLUDEPATH     += ./devices/hackrf-handler
         HEADERS         += ./devices/hackrf-handler/hackrf-handler.h
         SOURCES         += ./devices/hackrf-handler/hackrf-handler.cpp
-        FORMS           += ./devices/hackrf-handler/hackrf-widget.ui
-        LIBS            += -lhackrf
 }
 #
 

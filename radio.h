@@ -62,7 +62,6 @@ public:
 		RadioInterface		(QSettings	*,
 	                                 QString,
 	                                 bandHandler	*,
-	                                 virtualInput	*,
 	                                 QWidget	*parent = NULL);
 		~RadioInterface		(void);
 
@@ -71,7 +70,10 @@ private:
 	QString         deviceName;
 	void		set_picturePath		(void);
 	void		Increment_Channel	(void);
-	virtualInput	*setDevice		(QString);
+	deviceHandler	*setDevice		(QSettings *,
+	                                         QSpinBox *,
+	                                         QSpinBox *,
+	                                         QCheckBox *);
 	void		setColor		(QLabel *l, uint8_t b);
 	void		setColor		(QPushButton *l, uint8_t b);
 
@@ -94,7 +96,7 @@ private:
 	int		channels;
 	std::atomic<bool>	running;
 	bool		scanning;
-	virtualInput	*inputDevice;
+	deviceHandler	*inputDevice;
 	textMapper	the_textMapper;
 	dabProcessor	*my_dabProcessor;
 	audioBase	*soundOut;
@@ -154,8 +156,6 @@ public slots:
 	void		show_snr		(int);
 //	Somehow, these must be connected to the GUI
 private slots:
-	void		handle_gainSlider	(int);
-	void		handle_autoButton	(void);
 	void		reset			(void);
 	void		channelTimer_timeout	(void);
 	void		selectService		(QModelIndex);

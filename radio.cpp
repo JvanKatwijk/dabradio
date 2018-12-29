@@ -36,6 +36,18 @@
 #include	"audio-descriptor.h"
 #include	<mutex>
 
+#ifdef	HAVE_RTLSDR
+#include	"rtlsdr-handler.h"
+#endif
+#ifdef	HAVE_SDRPLAY
+#include	"sdrplay-handler.h"
+#endif
+#ifdef	HAVE_AIRSPY
+#include	"airspy-handler.h"
+#endif
+#ifdef	HAVE_HACKRF
+#include	"hackrf-handler.h"
+#endif
 /**
   *	We use the creation function merely to set up the
   *	user interface and make the connections between the
@@ -46,16 +58,13 @@
 	RadioInterface::RadioInterface (QSettings	*Si,
 	                                QString		serviceNames,
 	                                bandHandler	*theBand,
-	                                virtualInput	*theDevice,
 	                                QWidget		*parent):
 	                                        QMainWindow (parent) {
 int16_t	latency;
 int16_t k;
 QString h;
-int	gain;
 
 	dabSettings		= Si;
-	inputDevice		= theDevice;
 	this	-> theBand	= theBand;
 	channels		= theBand	-> channels ();
 	running. store (false);
@@ -89,15 +98,15 @@ int	gain;
 //	The settings are done, now creation of the GUI parts
 	setupUi (this);
 
-	gain		=
-		   dabSettings	-> value ("gain", 90). toInt ();
-	gainSlider	-> setValue (gain);
-	gainvalueDisplay	-> display (gain);
+	inputDevice		= setDevice (dabSettings,
+	                                     gainSelector,
+	                                     lnaSelector,
+	                                     agcControl);
+	if (inputDevice == NULL) {
+	   delete audioBuffer;
+	   throw (33);
+	}
 
-	autogain =
-	           dabSettings	-> value ("autogain", 0). toInt ();
-
-	setColor (autogainButton, autogain == 0);
 	syncedLabel		->
 	               setStyleSheet ("QLabel {background-color : red}");
 	strength_0_label	->
@@ -169,11 +178,6 @@ int	gain;
 	connect (my_dabProcessor, SIGNAL (setSynced (char)),
                  this, SLOT (setSynced (char)));
 //
-	connect	(gainSlider, SIGNAL (valueChanged (int)),
-	         this, SLOT (handle_gainSlider (int)));
-	connect	(autogainButton, SIGNAL (clicked (void)),
-	         this, SLOT (handle_autoButton (void)));
-
 	serviceCharacteristics	= NULL;
 	       secondsTimer. setInterval (1000);
         connect (&secondsTimer, SIGNAL (timeout (void)),
@@ -686,20 +690,6 @@ void	RadioInterface:: set_streamSelector (int k) {
 	((audioSink *)(soundOut)) -> selectDevice (k);
 }
 //
-void	RadioInterface::handle_gainSlider (int k) {
-	inputDevice		-> set_Gain (k);
-	gainvalueDisplay	-> display (k);
-	dabSettings		-> setValue ("gain", k);
-}
-
-void	RadioInterface::handle_autoButton (void) {
-	autogain	= !autogain;
-
-	setColor (autogainButton, autogain == 0);
-	inputDevice	-> set_autoGain (autogain != 0);
-	dabSettings	-> setValue ("autogain", autogain);
-}
-
 #include <QCloseEvent>
 void RadioInterface::closeEvent (QCloseEvent *event) {
 
@@ -767,3 +757,58 @@ bool	RadioInterface::eventFilter (QObject *obj, QEvent *event) {
 	return QMainWindow::eventFilter (obj, event);
 }
 
+deviceHandler	*RadioInterface::setDevice (QSettings	*dabSettings,
+	                                    QSpinBox	*gainSelector,
+	                                    QSpinBox	*lnaSelector,
+	                                    QCheckBox	*agcControl) {
+deviceHandler	*inputDevice	= NULL;
+int	gain;
+///	OK, everything quiet, now let us see what to do
+	gainSelector	-> hide ();
+	lnaSelector	-> hide ();
+	agcControl	-> hide ();
+#ifdef	HAVE_AIRSPY
+	try {
+	   inputDevice	= new airspyHandler (dabSettings,
+	                                     gainSelector,
+	                                     agcControl);
+	   gainSelector	-> show ();
+	   agcControl	-> show ();
+	   return inputDevice;
+	} catch (int e) {
+	}
+#endif
+#ifdef	HAVE_SDRPLAY
+	try {
+	   inputDevice	= new sdrplayHandler (dabSettings,
+	                                      gainSelector,
+	                                      lnaSelector,
+	                                      agcControl);
+	   gainSelector	-> show ();
+	   lnaSelector	-> show ();
+	   agcControl -> show ();
+	   return inputDevice;
+	} catch (int e) {}
+#endif
+#ifdef	HAVE_RTLSDR
+	try {
+	   inputDevice	= new rtlsdrHandler (dabSettings,
+	                                     gainSelector,
+	                                     agcControl);
+	   gainSelector	-> show ();
+	   agcControl	-> show ();
+	   return inputDevice;
+	} catch (int e) {}
+#endif
+#ifdef	HAVE_HACKRF
+	try {
+	   inputDevice	= new hackrfHandler (dabSettings,
+	                                     gainSelector,
+	                                     lnaSelector);
+	   gainSelector	-> show ();
+	   lnaSelector	-> show ();
+	   return inputDevice;
+	} catch (int e) {}
+#endif
+	return NULL;
+}

@@ -18,11 +18,13 @@
 #define	__AIRSPY_HANDLER__
 
 #include	<QSettings>
+#include	<QSpinBox>
+#include	<QCheckBox>
 #include	<vector>
 #include	<atomic>
 #include	"dab-constants.h"
 #include	"ringbuffer.h"
-#include	"virtual-input.h"
+#include	"device-handler.h"
 #ifndef	__MINGW32__
 #include	"libairspy/airspy.h"
 #else
@@ -78,14 +80,14 @@ typedef int (*pfn_airspy_set_linearity_gain) (struct airspy_device* device, uint
 typedef int (*pfn_airspy_set_sensitivity_gain)(struct airspy_device* device, uint8_t value);
 }
 
-class airspyHandler: public virtualInput {
+class airspyHandler: public deviceHandler {
+Q_OBJECT
 public:
-			airspyHandler		(QSettings *);
+			airspyHandler		(QSettings	*,
+	                                         QSpinBox	*,
+	                                         QCheckBox	*);
 			~airspyHandler		(void);
-	void		setVFOFrequency		(int32_t nf);
-	int32_t		getVFOFrequency		(void);
-	int32_t		defaultFrequency	(void);
-	bool		restartReader		(void);
+	bool		restartReader		(int32_t);
 	void		stopReader		(void);
 	int32_t		getSamples		(std::complex<float> *v,
 	                                                 int32_t size);
@@ -93,12 +95,10 @@ public:
 	void		resetBuffer		(void);
 	int16_t		bitDepth		(void);
 	int16_t		currentTab;
-	void		set_Gain		(int value);
-	void		set_autoGain		(bool b);
 private:
 	QSettings	*airspySettings;
-	int		gainValue;
-	int		autogainValue;
+	QSpinBox	*ifgainSelector;
+	QCheckBox	*agcControl;
 	bool		load_airspyFunctions	(void);
 //	The functions to be extracted from the dll/.so file
 	pfn_airspy_init		   my_airspy_init;
@@ -135,7 +135,6 @@ private:
 	bool		rf_bias;
 const	char*		board_id_name (void);
 
-	int16_t		theGain;
 	int32_t		selectedRate;
 	int16_t		convBufferSize;
 	int16_t		convIndex;
@@ -154,6 +153,9 @@ static
 	int		data_available (void *buf, int buf_size);
 const	char *		getSerial (void);
 	int		open (void);
+private slots:
+	void		set_ifgain		(int value);
+	void		set_agcControl		(int b);
 };
 
 #endif
