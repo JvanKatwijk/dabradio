@@ -174,7 +174,7 @@ endif ()
 	     ./includes/backend/data/mot/mot-object.h 
 	     ./includes/backend/data/mot/mot-dir.h 
 	     ./includes/backend/data/data-processor.h
-	     ./devices/virtual-input.h
+	     ./devices/device-handler.h
 	     ./includes/output/fir-filters.h
 	     ./includes/output/audio-base.h
 	     ./includes/output/newconverter.h
@@ -225,9 +225,7 @@ endif ()
 	     ./src/backend/data/mot/mot-object.cpp 
 	     ./src/backend/data/mot/mot-dir.cpp 
 	     ./src/backend/data/data-processor.cpp
-	     ./devices/virtual-input.cpp
-	     ./devices/rawfiles/rawfiles.cpp
-	     ./devices/wavfiles/wavfiles.cpp
+	     ./devices/device-handler.cpp
 	     ./src/output/audio-base.cpp
 	     ./src/output/newconverter.cpp
 	     ./src/output/fir-filters.cpp
@@ -249,6 +247,7 @@ endif ()
 	     ./dab-processor.h
 	     ./service-description/service-descriptor.h 
 	     ./service-description/audio-descriptor.h 
+	     ./devices/device-handler.h
 	     ./includes/output/audio-base.h
 	     ./includes/ofdm/sample-reader.h
 	     ./includes/ofdm/ofdm-decoder.h
@@ -304,7 +303,12 @@ endif ()
 	        ./devices/sdrplay-handler/sdrplay-handler.cpp
 	   )
 
-	 add_definitions (-DHAVE_SDRPLAY)
+	   set (${objectName}_MOCS
+	        ${${objectName}_MOCS}
+	        ./devices/sdrplay-handler/sdrplay-handler.h
+	   )
+
+	   add_definitions (-DHAVE_SDRPLAY)
 	endif (SDRPLAY)
 
 	if (AIRSPY)
@@ -332,6 +336,11 @@ endif ()
 	        ./devices/airspy-handler/airspyfilter.cpp
 	   )
 
+	   set (${objectName}_MOCS
+	        ${${objectName}_MOCS}
+	        ./devices/airspy-handler/airspy-handler.h
+	   )
+
 	   add_definitions (-DHAVE_AIRSPY)
 	endif (AIRSPY)
 
@@ -357,6 +366,10 @@ endif ()
 	        ./devices/rtlsdr-handler/rtlsdr-handler.cpp
 	   )
 
+	   set (${objectName}_MOCS
+	        ${${objectName}_MOCS}
+	        ./devices/rtlsdr-handler/rtlsdr-handler.h
+	   )
 	   add_definitions (-DHAVE_RTLSDR)
 	endif()
 #
@@ -424,8 +437,7 @@ endif ()
 	   )
 	endif (USE_PORTAUDIO)
 
-	QT5_WRAP_UI (UIS ${${objectName}_UIS}
-	             ./devices/filereader-widget.ui)
+	QT5_WRAP_UI (UIS ${${objectName}_UIS})
 
 	include_directories (
 	          ${SDRPLAY_INCLUDES}
