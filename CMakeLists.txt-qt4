@@ -170,7 +170,7 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
              ./includes/backend/data/mot/mot-handler.h
              ./includes/backend/data/mot/mot-object.h
 	     ./includes/backend/data/data-processor.h
-             ./devices/virtual-input.h
+             ./devices/device-handler.h
              ./includes/output/fir-filters.h
              ./includes/output/audio-base.h
              ./includes/output/newconverter.h
@@ -222,9 +222,7 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
              ./src/backend/data/mot/mot-object.cpp
              ./src/backend/data/mot/mot-dir.cpp
              ./src/backend/data/data-processor.cpp
-             ./devices/virtual-input.cpp
-             ./devices/rawfiles/rawfiles.cpp
-             ./devices/wavfiles/wavfiles.cpp
+             ./devices/device-handler.cpp
              ./src/output/audio-base.cpp
              ./src/output/newconverter.cpp
              ./src/output/fir-filters.cpp
@@ -265,8 +263,7 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
 
        set (${objectName}_UIS
                 ${${objectName}_UIS} ./forms/dabradio.ui
-                                     ./forms/audio-description.ui
-	                             ./devices/filereader-widget.ui)
+                                     ./forms/audio-description.ui)
 
 	set (${objectName}_MOCS
 	        ${${objectName}_MOCS} ./radio.h)
