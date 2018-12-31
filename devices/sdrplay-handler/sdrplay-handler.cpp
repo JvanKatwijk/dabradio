@@ -168,7 +168,7 @@ ULONG APIkeyValue_length = 255;
 	      break;
 	}
 
-	sdrplaySettings         -> beginGroup ("sdrplaySettings");
+	sdrplaySettings	-> beginGroup ("sdrplaySettings");
 	int lnaState	= sdrplaySettings -> value ("lnaState", 3). toInt ();
 	lnaGainSetting	-> setValue (lnaState);
 
@@ -211,6 +211,11 @@ ULONG APIkeyValue_length = 255;
 	if (!libraryLoaded)	// should not happen
 	   return;
 	stopReader ();
+	
+	sdrplaySettings	-> beginGroup ("sdrplaySettings");
+	sdrplaySettings -> value ("lnaState", lnaGainSetting -> value ());
+	sdrplaySettings -> value ("GRdB", GRdBSelector -> value ());
+	sdrplaySettings	-> endGroup ();
 
 	if (_I_Buffer != NULL)
 	   delete _I_Buffer;
@@ -228,15 +233,21 @@ int     GRdB            = GRdBSelector  -> value ();
 int     lnaState        = lnaGainSetting -> value ();
 
         (void)newGRdB;
+	if (!running. load ())
+	   return;
 
         err     =  my_mir_sdr_RSP_SetGr (GRdB, lnaState, 1, 0);
         if (err != mir_sdr_Success)
-           fprintf (stderr, "Error at set_ifgain %s\n",
-                            errorCodes (err). toLatin1 (). data ());
+           fprintf (stderr, "Error at set_ifgain %s (%d %d)\n",
+                             errorCodes (err). toLatin1 (). data (),
+	                     GRdB, lnaState);
 }
 
 void    sdrplayHandler::set_lnagainReduction (int lnaState) {
 mir_sdr_ErrT err;
+
+	if (!running. load ())
+	   return;
 
 	if (!agcControl -> isChecked ()) {
 	   set_ifgainReduction (0);

@@ -201,7 +201,7 @@ LIBS		+= -lfaad
 CONFIG		+= dabstick
 CONFIG		+= sdrplay
 CONFIG		+= airspy
-CONFIG		+= hackrf	
+#CONFIG		+= hackrf	
 #if you want to listen remote, uncomment
 #CONFIG		+= tcp-streamer		# use for remote listening
 #otherwise, if you want to use the default qt way of soud out
@@ -262,7 +262,7 @@ FORMS 		+= ./forms/dabradio.ui
 CONFIG		+= airspy
 CONFIG		+= dabstick
 CONFIG		+= sdrplay
-CONFIG		+= hackrf
+#CONFIG		+= hackrf
 CONFIG		+= NO_SSE
 
 
