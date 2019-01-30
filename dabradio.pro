@@ -33,7 +33,6 @@ DEPENDPATH += . \
 	      ./src/backend/data/mot \
 	      ./src/output \
 	      ./src/support \
-	      ./src/support/viterbi_768 \
 	      ./devices \
 	      ./devices/rawfiles \
 	      ./devices/wavfiles \
@@ -44,7 +43,6 @@ DEPENDPATH += . \
 	      ./includes/backend/data/mot \
 	      ./includes/output \
 	      ./includes/support \
-	      ./includes/support/viterbi_768 
 
 INCLUDEPATH += . \
 	      ./ \
@@ -59,7 +57,6 @@ INCLUDEPATH += . \
 	      ./includes/backend/data/mot \
 	      ./includes/output \
 	      ./includes/support \
-	      ./includes/support/viterbi_768 \
 	      ./devices \
 	      ./devices/rawfiles \
 	      ./devices/wavfiles 
@@ -106,10 +103,9 @@ HEADERS += ./radio.h \
 	   ./includes/output/audio-base.h \
 	   ./includes/output/newconverter.h \
 	   ./includes/output/audiosink.h \
-	   ./includes/support/viterbi_768/viterbi-768.h \
+	   ./includes/support/viterbi-handler.h \
            ./includes/support/fft-handler.h \
 	   ./includes/support/ringbuffer.h \
-	   ./includes/support/Xtan2.h \
 	   ./includes/support/dab-params.h \
 	   ./includes/support/band-handler.h \
 	   ./includes/support/text-mapper.h \
@@ -158,9 +154,8 @@ SOURCES += ./main.cpp \
 	   ./src/output/audio-base.cpp \
 	   ./src/output/newconverter.cpp \
 	   ./src/output/audiosink.cpp \
-	   ./src/support/viterbi_768/viterbi-768.cpp \
+	   ./src/support/viterbi-handler.cpp \
            ./src/support/fft-handler.cpp \
-	   ./src/support/Xtan2.cpp \
 	   ./src/support/dab-params.cpp \
 	   ./src/support/band-handler.cpp \
 	   ./src/support/text-mapper.cpp \
@@ -214,13 +209,6 @@ DEFINES	+= __THREADED_BACKEND
 
 #and this one is experimental
 DEFINES		+= PRESET_NAME
-
-#and these one is just experimental,
-#NO_SSE is always safe
-#CONFIG	+= NEON_RPI2
-#CONFIG	+= NEON_RPI3
-CONFIG	+= SSE
-#CONFIG	+= NO_SSE
 }
 #
 # an attempt to have it run under W32 through cross compilation
@@ -263,8 +251,6 @@ CONFIG		+= airspy
 CONFIG		+= dabstick
 CONFIG		+= sdrplay
 #CONFIG		+= hackrf
-CONFIG		+= NO_SSE
-
 
 #for the raspberry you definitely want this one
 #when this one is enabled, load is spread over different threads
@@ -339,34 +325,5 @@ qt-audio	{
 	                   ./includes/output/Qt-audiodevice.h
 	SOURCES		+= ./src/output/Qt-audio.cpp \
 	                   ./src/output/Qt-audiodevice.cpp
-}
-
-# for RPI2 use:
-NEON_RPI2	{
-	DEFINES		+= NEON_AVAILABLE
-	QMAKE_CFLAGS	+=  -mcpu=cortex-a7 -mfloat-abi=hard -mfpu=neon-vfpv4  
-	QMAKE_CXXFLAGS	+=  -mcpu=cortex-a7 -mfloat-abi=hard -mfpu=neon-vfpv4  
-	HEADERS		+= ./src/support/viterbi_768/spiral-neon.h
-	SOURCES		+= ./src/support/viterbi_768/spiral-neon.c
-}
-
-# for RPI3 use:
-NEON_RPI3	{
-	DEFINES		+= NEON_AVAILABLE
-#	QMAKE_CFLAGS	+=  -mcpu=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8 -mneon-for-64bits
-#	QMAKE_CXXFLAGS	+=  -mcpu=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8 -mneon-for-64bits
-	HEADERS		+= ./src/support/viterbi_768/spiral-neon.h
-	SOURCES		+= ./src/support/viterbi_768/spiral-neon.c
-}
-
-SSE	{
-	DEFINES		+= SSE_AVAILABLE
-	HEADERS		+= ./src/support/viterbi_768/spiral-sse.h
-	SOURCES		+= ./src/support/viterbi_768/spiral-sse.c
-}
-
-NO_SSE	{
-	HEADERS		+= ./src/support/viterbi_768/spiral-no-sse.h
-	SOURCES		+= ./src/support/viterbi_768/spiral-no-sse.c
 }
 

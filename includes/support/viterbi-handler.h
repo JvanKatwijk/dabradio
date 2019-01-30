@@ -4,7 +4,8 @@
  *    Jan van Katwijk (J.vanKatwijk@gmail.com)
  *    Lazy Chair Computing
  *
- *    This file is part of the dabradio
+ *    This file is part of dabradio
+ *
  *    dabradio is free software; you can redistribute it and/or modify
  *    it under the terms of the GNU General Public License as published by
  *    the Free Software Foundation; either version 2 of the License, or
@@ -18,30 +19,29 @@
  *    You should have received a copy of the GNU General Public License
  *    along with dabradio; if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- *
- *	Simple base class for combining uep and eep deconvolvers
  */
-#ifndef	__PROTECTION__
-#define	__PROTECTION__
+
+#ifndef	__VITERBI_HANDLER__
+#define	__VITERBI_HANDLER__
 
 #include	<stdint.h>
-#include        <vector>
-#include        "viterbi-handler.h"
 
-extern uint8_t	PI_X [];
+class	viterbiHandler {
 
-class   protection: public viterbiHandler {
 public:
-                protection      (int16_t, int16_t);
-virtual         ~protection     (void);
-virtual bool    deconvolve      (int16_t *, int32_t, uint8_t *);
-protected:
-        int16_t         bitRate;
-        int32_t         outSize;
-	std::vector<uint8_t> indexTable;
-        std::vector<int16_t> viterbiBlock;
+		viterbiHandler	(int);
+		~viterbiHandler	(void);
+	void	deconvolve	(int16_t *, uint8_t *);
+private:
+	int     costTable [16];
+	void	computeCostTable (int16_t,  int16_t, int16_t, int16_t);
+	uint8_t	bitFor		(int, int, int);
+	int	blockLength;
+	int	*stateSequence;
+	int	**transCosts;
+	int	**history;
 };
 
 #endif
 
+	
