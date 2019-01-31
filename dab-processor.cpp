@@ -68,7 +68,7 @@ int32_t	i;
 	this	-> nrBlocks		= params. get_L ();
 	this	-> carriers		= params. get_carriers ();
 	this	-> carrierDiff		= params. get_carrierDiff ();
-	this	-> giveSignal		= false;
+	this	-> scanMode		= false;
 
 	ofdmBuffer. resize (2 * T_s);
 	ofdmBufferIndex			= 0;
@@ -92,9 +92,10 @@ int32_t	i;
 	}
 }
 
-void	dabProcessor::start (int frequency, bool giveSignal) {
-	this		-> frequency = frequency;
-	this		-> giveSignal = giveSignal;
+void	dabProcessor::start (int frequency, bool scanMode) {
+	this		-> frequency	= frequency;
+	this		-> scanMode	= scanMode;
+	startFailures	= 0;
 	this -> QThread::start ();
 }
 	
@@ -137,7 +138,7 @@ notSynced:
                  break;                 // yes, we are ready
 
               case NO_DIP_FOUND:
-                 if (giveSignal && (++ attempts >= 5)) {
+                 if (scanMode && (++ attempts >= 5)) {
                     emit (No_Signal_Found ());
                     attempts = 0;
                  }
@@ -174,9 +175,15 @@ SyncOnPhase:
 	      if (!correctionNeeded) {
 	         setSyncLost ();
 	      }
+	      startFailures ++;
+	      if (scanMode && (startFailures > 3)) {
+                 emit (No_Signal_Found ());
+	         startFailures = 0;
+	      }
 	      goto notSynced;
 	   }
 
+	   startFailures	= 0;
 /**
   *	Once here, we are synchronized, we need to copy the data we
   *	used for synchronization for block 0
@@ -252,6 +259,21 @@ NewOffset:
   */
 	   myReader. getSamples (ofdmBuffer. data (),
 	                         T_null, coarseOffset);
+
+	   float sum    = 0;
+           for (i = 0; i < T_null; i ++)
+              sum += abs (ofdmBuffer [i]);
+           sum /= T_null;
+
+           static       float snr       = 0;
+           snr = 0.9 * snr +
+                 0.1 * 20 * log10 ((myReader. get_sLevel () + 0.005) / sum);
+           static int ccc       = 0;
+           if (++ccc > 10) {
+              ccc = 0;
+              show_snr ((int)snr);
+           }
+
 /**
   *	The first sample to be found for the next frame should be T_g
   *	samples ahead. Before going for the next frame, we

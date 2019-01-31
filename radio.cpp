@@ -177,6 +177,8 @@ QString h;
                                             picturesPath);
 	connect (my_dabProcessor, SIGNAL (setSynced (char)),
                  this, SLOT (setSynced (char)));
+	connect (my_dabProcessor, SIGNAL (show_snr (int)),
+	         this, SLOT (show_snr (int)));
 //
 	serviceCharacteristics	= NULL;
 	       secondsTimer. setInterval (1000);
@@ -290,6 +292,7 @@ void	RadioInterface::nextChannel (void) {
 
 void	RadioInterface::reset (void) {
 	my_dabProcessor	-> stop ();
+	
 	disconnect (ensembleDisplay,
 	         SIGNAL (clicked (QModelIndex)),
 	         this, SLOT (selectService (QModelIndex)));
@@ -445,7 +448,7 @@ void	RadioInterface::showQuality		(float f) {
 }
 
 void	RadioInterface::show_snr		(int s) {
-	(void)s;
+	snrDisplay	-> display (s);
 }
 
 void	RadioInterface::set_CorrectorDisplay	(int c) {
@@ -590,15 +593,16 @@ void	RadioInterface::TerminateProcess (void) {
 	displayTimer. stop ();
 	signalTimer.  stop ();
 
+	inputDevice	-> stopReader ();
 	my_dabProcessor	-> stop ();		// definitely concurrent
 	soundOut	-> stop ();
 //	everything should be halted by now
-	delete		soundOut;
-	if (inputDevice != NULL)
-	   delete	inputDevice;
 	fprintf (stderr, "going to delete dabProcessor\n");
 	delete	my_dabProcessor;
 	fprintf (stderr, "deleted dabProcessor\n");
+	delete		soundOut;
+	if (inputDevice != NULL)
+	   delete	inputDevice;
 	if (ensembleDisplay != NULL)
 	   delete	ensembleDisplay;
 	if (serviceDescription != NULL)
