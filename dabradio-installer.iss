@@ -11,7 +11,7 @@
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId= {{0BD3638B-D634-4F75-B8BF-756A9FB7A370}
+AppId= {{B4C322AE-1C29-47E8-BF74-ED434065488D}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
@@ -22,7 +22,7 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={pf}\{#MyAppName}
 DisableProgramGroupPage=yes
 LicenseFile=E:\sdr-j-development\windows-qt-dab\COPYRIGHT.this_software
-InfoBeforeFile=E:\sdr-j-development\windows-qt-dab\preamble.txt
+InfoBeforeFile=E:\sdr-j-development\windows-dabradio\preamble.txt
 OutputBaseFilename=setup-dabradio
 Compression=lzma
 SolidCompression=yes

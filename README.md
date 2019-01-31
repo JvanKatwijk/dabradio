@@ -81,8 +81,9 @@ although MOT as subservice is - limited - implemented.
 Windows
 ------------------------------------------------------------------
 
-Windows releases can be found at https://github.com/JvanKatwijk/dabradio/releases. The zipped folder found there contains
-the executable for this and some other windows prohgrams, as well as the libraries required. 
+For Windows, an *installer*  is available in the releases
+section. The installer will aldo install - if not installed
+already - the library for SDRplay support.
 
 If you want to compile it by yourself, please install Qt
 through its online installer, see https://www.qt.io/ 
