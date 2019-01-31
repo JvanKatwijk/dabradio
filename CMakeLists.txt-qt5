@@ -133,7 +133,6 @@ endif ()
 	           ./includes/backend/data/journaline
 	           ./includes/backend/data/mot
 	           ./includes/support
-	           ./includes/support/viterbi_768
 	           ./includes/output
 	           ./devices
 	           /usr/include/
@@ -178,10 +177,9 @@ endif ()
 	     ./includes/output/fir-filters.h
 	     ./includes/output/audio-base.h
 	     ./includes/output/newconverter.h
-	     ./includes/support/viterbi_768/viterbi-768.h
+	     ./includes/support/viterbi-handler.h
 	     ./includes/support/fft-handler.h
 	     ./includes/support/ringbuffer.h
-	     ./includes/support/Xtan2.h
 	     ./includes/support/dab-params.h
 	     ./includes/support/band-handler.h
 	     ./includes/support/text-mapper.h
@@ -230,13 +228,11 @@ endif ()
 	     ./src/output/newconverter.cpp
 	     ./src/output/fir-filters.cpp
 	     ./src/support/fft-handler.cpp
-	     ./src/support/Xtan2.cpp
 	     ./src/support/dab-params.cpp
 	     ./src/support/band-handler.cpp
 	     ./src/support/text-mapper.cpp
 	     ./src/support/dab_tables.cpp
-	     ./src/support/viterbi_768/viterbi-768.cpp
-	     ./src/support/viterbi_768/spiral-no-sse.c
+	     ./src/support/viterbi-handler.cpp
 	)
 
 	set (${objectName}_UIS

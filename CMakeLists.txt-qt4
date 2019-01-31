@@ -129,7 +129,6 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
                    ./includes/backend/data/mot
                    ./includes/backend/data/journaline
                    ./includes/support
-                   ./includes/support/viterbi_768
                    ./includes/output
                    ./devices
 	           /usr/include/
@@ -175,10 +174,9 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
              ./includes/output/audio-base.h
              ./includes/output/newconverter.h
 	     ./includes/output/audiosink.h
-             ./includes/support/viterbi_768/viterbi-768.h
+             ./includes/support/viterbi-handler.h
              ./includes/support/fft-handler.h
              ./includes/support/ringbuffer.h
-             ./includes/support/Xtan2.h
              ./includes/support/dab-params.h
              ./includes/support/band-handler.h
              ./includes/support/text-mapper.h
@@ -228,13 +226,11 @@ add_definitions (-DTHREADED_DECODING)	# uncomment for use for an RPI
              ./src/output/fir-filters.cpp
 	     ./src/output/audiosink.cpp
              ./src/support/fft-handler.cpp
-             ./src/support/Xtan2.cpp
              ./src/support/dab-params.cpp
              ./src/support/band-handler.cpp
              ./src/support/text-mapper.cpp
              ./src/support/dab_tables.cpp
-             ./src/support/viterbi_768/viterbi-768.cpp
-             ./src/support/viterbi_768/spiral-no-sse.c
+             ./src/support/viterbi-handler.cpp
 	)
 
 	set (${objectName}_MOCS
