@@ -195,7 +195,7 @@ LIBS		+= -lfaad
 # (you obviously have libraries installed for the selected ones)
 CONFIG		+= dabstick
 CONFIG		+= sdrplay
-CONFIG		+= airspy
+#CONFIG		+= airspy
 #CONFIG		+= hackrf	
 #if you want to listen remote, uncomment
 #CONFIG		+= tcp-streamer		# use for remote listening
