@@ -33,7 +33,7 @@ Introduction
 
 **dabradio** and Qt-DAB share a lot of functionality, obviously. Nevertheless
 to avoid even more "ifdef"s in the code, it was decided to
-maintain a GitHub repository for both of them.
+maintain separate GitHub repositories for each of them.
 
 A feature specific to this implementation is that,
 rather than selecting a channel, the software maintains a list of
@@ -45,7 +45,9 @@ all channels in the given band are listened to to see whether or not
 a DAB signal can be detected. If so, the channel is recorded.
 
 The GUI does *not* provide buttons to select the Mode or the Band. Defaults are Mode 1 and the VHF Band III. In the ".ini" file
-(a file .dabradio.ini in the home directory of the user) the Mode can be set as well as the band.
+(a file .dabradio.ini in the home directory of the user) the Mode can be set as well as the band (Since the DAB standard in 2016 simplified DAB (a.o) by
+just supporting Mode 1 in VHF Band III, a future version will omit the
+possibility of choosing band and/or mode).
 
 The services are presented in a separate widget, for each service the
 widget contains some additional information.
@@ -63,7 +65,7 @@ Features
   * DAB (mp2) and DAB+ (HE-AAC v1, HE-AAC v2 and LC-AAC) decoding
   * MOT SlideShow (SLS)
   * Dynamic Label (DLS) 
-  * Both DAB bands supported (default VHF Band III, can be set in the ini file):
+  * (Almost obsolete) Both DAB bands supported (default VHF Band III, can be set in the ini file):
   	* VHF Band III
    	* L-Band (only used in Czech Republic and Vatican)
   * Scanning function (scanning over all channels in a given band and collecting
@@ -76,6 +78,16 @@ all services)
 
 Data services are not visible to the user,
 although MOT as subservice is - limited - implemented.
+
+Especially with simple devices, as e.g. DABsticks, with poor antenna
+equipment, there is a chance that decoding and error correction fails,
+resulting in some hick ups in the sound output.
+
+The most recent version now shows the successrate in Fib decoding
+as well as the successrate in audio decoding. In a decent setup, i.e.
+with a reasonable antenna, the successrate in the Fib decoding should be 100.
+If the successrate in the audiodecoding is less than 100, one might expect
+some gaps in the audio output.
 
 ------------------------------------------------------------------
 Windows
@@ -219,7 +231,6 @@ CONFIG          += NO_SSE
 
 Slightly slower since no the other two use specialized instructions
 in the viterbi decoding (which is quite heavy in DAB decoding)
-
 
 Further in the ".pro" file, in the section labeled NEON, you could
 choose between compiler flags set for optimizing for the RPI2 or the RPI3

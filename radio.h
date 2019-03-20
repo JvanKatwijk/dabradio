@@ -149,9 +149,7 @@ public slots:
 	void		showImpulse		(int);
 	void		showSpectrum		(int);
 	void		showIQ			(int);
-	void		show_frameErrors	(int);
-	void		show_rsErrors		(int);
-	void		show_aacErrors		(int);
+	void		show_audioQuality	(int);
 	void		showQuality		(float);
 	void		show_snr		(int);
 //	Somehow, these must be connected to the GUI

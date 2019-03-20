@@ -31,7 +31,6 @@
 #include	"dab-constants.h"
 #include	"ringbuffer.h"
 #include	"device-handler.h"
-#include	"ui_hackrf-widget.h"
 #include	"libhackrf/hackrf.h"
 
 typedef int (*hackrf_samble_block_bc_fn)(hackrf_transfer *transfer);

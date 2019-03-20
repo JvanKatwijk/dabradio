@@ -47,12 +47,8 @@
 	                             aacDecoder (mr, b) {
 
 	myRadioInterface	= mr;
-	connect (this, SIGNAL (show_frameErrors (int)),
-	         mr, SLOT (show_frameErrors (int)));
-	connect (this, SIGNAL (show_rsErrors (int)),
-	         mr, SLOT (show_rsErrors (int)));
-	connect (this, SIGNAL (show_aacErrors (int)),
-	         mr, SLOT (show_aacErrors (int)));
+	connect (this, SIGNAL (show_audioQuality (int)),
+	         mr, SLOT (show_audioQuality (int)));
 	connect (this, SIGNAL (isStereo (bool)),
 	         mr, SLOT (setStereo (bool)));
 	this	-> bitRate	= bitRate;	// input rate
@@ -106,10 +102,11 @@ int16_t	nbits	= 24 * bitRate;
   */
 	if (blocksInBuffer >= 5) {
 ///	first, we show the "successrate"
-	   if (++frameCount >= 100) {
+	   if (++frameCount >= 20) {
 	      frameCount = 0;
-	      show_frameErrors (100 - frameErrors);
-	      frameErrors = 0;
+	      int audioQuality	= (100 - 5 * frameErrors - aacErrors - rsErrors);
+	      show_audioQuality (audioQuality);
+	      frameErrors = aacErrors = rsErrors = 0;
 	   }
 
 /**
@@ -123,11 +120,6 @@ int16_t	nbits	= 24 * bitRate;
 //	since we processed a full cycle of 5 blocks, we just start a
 //	new sequence, beginning with block blockFillIndex
 	      blocksInBuffer	= 0;
-	      if (++successFrames > 25) {
-	         show_rsErrors (rsErrors);
-	         successFrames	= 0;
-	         rsErrors	= 0;
-	      }
 	   }
 	   else {
 /**
@@ -287,11 +279,6 @@ int32_t		tmp;
 //	                                   &err);
 	      if (err) 
 	         aacErrors ++;
-	      if (++aacFrames > 25) {
-	         show_aacErrors (aacErrors);
-	         aacErrors	= 0;
-	         aacFrames	= 0;
-	      }
 	   }
 	   else {
 	      fprintf (stderr, "CRC failure with dab+ frame %d (%d)\n",

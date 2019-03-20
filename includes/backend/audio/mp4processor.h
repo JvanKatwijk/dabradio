@@ -87,9 +87,7 @@ private:
 	int16_t		aacFrames;
 	int16_t		charSet;
 signals:
-	void		show_frameErrors		(int);
-	void		show_rsErrors			(int);
-	void		show_aacErrors			(int);
+	void		show_audioQuality		(int);
 	void		isStereo			(bool);
 };
 

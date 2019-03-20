@@ -109,19 +109,12 @@ QString h;
 
 	syncedLabel		->
 	               setStyleSheet ("QLabel {background-color : red}");
-	strength_0_label	->
-	               setStyleSheet ("QLabel {background-color : red}");
-	strength_1_label	->
-	               setStyleSheet ("QLabel {background-color : red}");
-	strength_2_label	->
-	               setStyleSheet ("QLabel {background-color : red}");
-	strength_3_label	->
-	               setStyleSheet ("QLabel {background-color : red}");
-	strength_4_label	->
-	               setStyleSheet ("QLabel {background-color : red}");
 //
 	motLabel		->
 	               setStyleSheet ("QLabel {background-color : red}");
+
+	audioQuality		-> setValue (0);
+	ficQuality		-> setValue (0);
 
 //	display the version
 	QString v = "j-radio -" + QString (CURRENT_VERSION);
@@ -364,51 +357,7 @@ void	RadioInterface::show_ficSuccess (bool b) {
 	if (b)
 	   ficSuccess ++;
 	if (++ficBlocks >= 100) {
-	   switch ((ficSuccess + 10) / 20) {
-	      default:			// should not happen
-	      case 0:	// 5 red blocks
-	         setColor (strength_0_label, 0);
-	         setColor (strength_1_label, 0);
-	         setColor (strength_2_label, 0);
-	         setColor (strength_3_label, 0);
-	         setColor (strength_4_label, 0);
-	         break;
-	      case 1:	// 1 green, four red
-	         setColor (strength_0_label, 1);
-	         setColor (strength_1_label, 0);
-	         setColor (strength_2_label, 0);
-	         setColor (strength_3_label, 0);
-	         setColor (strength_4_label, 0);
-	         break;
-	      case 2:	// 2 green, three red
-	         setColor (strength_0_label, 1);
-	         setColor (strength_1_label, 1);
-	         setColor (strength_2_label, 0);
-	         setColor (strength_3_label, 0);
-	         setColor (strength_4_label, 0);
-	         break;
-	      case 3:	// 3 green, two red
-	         setColor (strength_0_label, 1);
-	         setColor (strength_1_label, 1);
-	         setColor (strength_2_label, 1);
-	         setColor (strength_3_label, 0);
-	         setColor (strength_4_label, 0);
-	         break;
-	      case 4:	// 4 green, one red
-	         setColor (strength_0_label, 1);
-	         setColor (strength_1_label, 1);
-	         setColor (strength_2_label, 1);
-	         setColor (strength_3_label, 1);
-	         setColor (strength_4_label, 0);
-	         break;
-	      case 5:	// 5 green
-	         setColor (strength_0_label, 1);
-	         setColor (strength_1_label, 1);
-	         setColor (strength_2_label, 1);
-	         setColor (strength_3_label, 1);
-	         setColor (strength_4_label, 1);
-	         break;
-	   }
+	   ficQuality -> setValue (ficSuccess);
 	   ficSuccess	= 0;
 	   ficBlocks	= 0;
 	}
@@ -452,16 +401,8 @@ void	RadioInterface::set_CorrectorDisplay	(int c) {
 	(void)c;
 }
 
-void	RadioInterface::show_frameErrors	(int e) {
-	emit set_quality (e);
-}
-
-void	RadioInterface::show_rsErrors		(int e) {
-	(void)e;
-}
-
-void	RadioInterface::show_aacErrors		(int e) {
-	(void)e;
+void	RadioInterface::show_audioQuality	(int e) {
+	audioQuality -> setValue (e);
 }
 
 ///	just switch a color, obviously GUI dependent, but called

@@ -242,8 +242,8 @@ int16_t *nPtr = &N [0][0];
 	myRadioInterface	= mr;
 	this	-> buffer	= buffer;
 	this	-> bitRate	= bitRate;
-	connect (this, SIGNAL (show_frameErrors (int)),
-	         mr, SLOT (show_frameErrors (int)));
+	connect (this, SIGNAL (show_audioQuality (int)),
+	         mr, SLOT (show_audioQualitys (int)));
 	connect (this, SIGNAL (newAudio (int, int)),
 	         mr, SLOT (newAudio (int, int)));
 	connect (this, SIGNAL (isStereo (bool)),
@@ -381,7 +381,7 @@ int32_t table_idx;
 
 	numberofFrames ++;
 	if (numberofFrames >= 100) {
-	   show_frameErrors (100 - errorFrames);
+	   show_audioQuality (100 - errorFrames);
 	   numberofFrames	= 0;
 	   errorFrames		= 0;
 	}
