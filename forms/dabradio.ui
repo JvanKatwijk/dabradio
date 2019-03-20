@@ -371,9 +371,9 @@
    <widget class="QProgressBar" name="ficQuality">
     <property name="geometry">
      <rect>
-      <x>30</x>
-      <y>40</y>
-      <width>151</width>
+      <x>10</x>
+      <y>30</y>
+      <width>121</width>
       <height>21</height>
      </rect>
     </property>
@@ -387,9 +387,9 @@
    <widget class="QProgressBar" name="audioQuality">
     <property name="geometry">
      <rect>
-      <x>187</x>
-      <y>40</y>
-      <width>171</width>
+      <x>140</x>
+      <y>30</y>
+      <width>151</width>
       <height>21</height>
      </rect>
     </property>
@@ -398,6 +398,25 @@
     </property>
     <property name="value">
      <number>24</number>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="snrDisplay">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>30</y>
+      <width>64</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+    <property name="digitCount">
+     <number>3</number>
+    </property>
+    <property name="segmentStyle">
+     <enum>QLCDNumber::Flat</enum>
     </property>
    </widget>
   </widget>

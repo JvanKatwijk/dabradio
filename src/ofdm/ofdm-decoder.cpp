@@ -4,19 +4,19 @@
  *    Jan van Katwijk (J.vanKatwijk@gmail.com)
  *    Lazy Chair Computing
  *
- *    This file is part of Qt-DAB
- *    Qt-DAB is free software; you can redistribute it and/or modify
+ *    This file is part of dabradio
+ *    dabradio is free software; you can redistribute it and/or modify
  *    it under the terms of the GNU General Public License as published by
  *    the Free Software Foundation; either version 2 of the License, or
  *    (at your option) any later version.
  *
- *    Qt-DAB is distributed in the hope that it will be useful,
+ *    dabradio is distributed in the hope that it will be useful,
  *    but WITHOUT ANY WARRANTY; without even the implied warranty of
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *    GNU General Public License for more details.
  *
  *    You should have received a copy of the GNU General Public License
- *    along with Qt-DAB; if not, write to the Free Software
+ *    along with dabradio; if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *	Once the bits are "in", interpretation and manipulation
@@ -68,12 +68,6 @@ int16_t	i;
 	this	-> T_g			= T_s - T_u;
 	fft_buffer			= my_fftHandler. getVector ();
 	phaseReference			.resize (T_u);
-
-       connect (this, SIGNAL (show_snr (int)),
-                 mr, SLOT (show_snr (int)));
-
-	snrCount		= 0;
-	snr			= 0;	
 }
 
 	ofdmDecoder::~ofdmDecoder	(void) {
@@ -93,17 +87,6 @@ void	ofdmDecoder::processBlock_0 (std::vector <std::complex<float> > buffer) {
 	                             T_u * sizeof (std::complex<float>));
 
 	my_fftHandler. do_FFT ();
-/**
-  *	The SNR is determined by looking at a segment of bins
-  *	within the signal region and bits outside.
-  *	It is just an indication
-  */
-
-	if (++snrCount > 10) {
-	   snr	= 0.8 * snr + 0.2 * get_snr (fft_buffer);
-//	   show_snr (snr);
-	   snrCount = 0;
-	}
 /**
   *	we are now in the frequency domain, and we keep the carriers
   *	as coming from the FFT as phase reference.
@@ -205,26 +188,4 @@ toBitsLabel:
 	   }
 	}
 }
-/**
-  *	for the snr we have a full T_u wide vector, with in the middle
-  *	K carriers.
-  *	Just get the strength from the selected carriers compared
-  *	to the strength of the carriers outside that region
-  */
-int16_t	ofdmDecoder::get_snr (std::complex<float>  *v) {
-int16_t	i;
-float	noise 	= 0;
-float	signal	= 0;
-
-	for (i = -100; i < 100; i ++)
-	   noise += abs (v [(T_u / 2 + i)]);
-
-	noise	/= 200;
-	for (i =  - carriers / 4;  i <  carriers / 4; i ++)
-	   signal += abs (v [(T_u + i) % T_u]);
-	signal	/= (carriers / 2);
-
-	return 20 * log10 ((signal + 0.005) / (noise + 0.005));
-}
-
 

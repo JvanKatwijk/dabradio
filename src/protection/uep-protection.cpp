@@ -4,19 +4,19 @@
  *    Jan van Katwijk (J.vanKatwijk@gmail.com)
  *    Lazy Chair Computing
  *
- *    This file is part of the Qt-DAB program
- *    Qt-DAB is free software; you can redistribute it and/or modify
+ *    This file is part of the dabradio
+ *    dabradio is free software; you can redistribute it and/or modify
  *    it under the terms of the GNU General Public License as published by
  *    the Free Software Foundation; either version 2 of the License, or
  *    (at your option) any later version.
  *
- *    Qt-DAB is distributed in the hope that it will be useful,
+ *    dabradio is distributed in the hope that it will be useful,
  *    but WITHOUT ANY WARRANTY; without even the implied warranty of
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *    GNU General Public License for more details.
  *
  *    You should have received a copy of the GNU General Public License
- *    along with Qt-DAB; if not, write to the Free Software
+ *    along with dabradio; if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * 	The deconvolution for uep
@@ -231,6 +231,8 @@ bool	uep_protection::deconvolve (int16_t *v,
 	                            uint8_t *outBuffer) {
 int16_t	i;
 int16_t	inputCounter	= 0;
+
+	(void)size;
 //	clear the bits in the viterbiBlock,
 //	only the non-punctured ones are set
 	memset (viterbiBlock. data (), 0,
@@ -240,6 +242,6 @@ int16_t	inputCounter	= 0;
 	for (i = 0; i < outSize * 4 + 24; i ++)
 	   if (indexTable [i])
 	      viterbiBlock [i] = v [inputCounter ++];
-	viterbi_768::deconvolve (viterbiBlock. data (), outBuffer);
+	viterbiHandler::deconvolve (viterbiBlock. data (), outBuffer);
 	return true;
 }

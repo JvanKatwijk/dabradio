@@ -3,7 +3,38 @@
 
 dabradio is a Software for Windows, Linux and Raspberry Pi for listening to terrestrial Digital Audio Broadcasting (DAB and DAB+). It is the little brother of Qt-DAB.
 
-NEW: the software should be able to run with the mirics SDRplay-duo
+------------------------------------------------------------------------
+NEW: a script to build an executable on an rpi
+-----------------------------------------------------------------------
+
+In order to ease building an executable on a Raspberry 2 or 3, a
+script, "script-rpi.sh" is available that will do all
+installations of required libraries, and build an executable
+for an executable "dabradio-1.0", configured for DABsticks and sdrPlay
+devices.
+
+The script will load sources for a DABstick handler and build
+and install the library.
+An installer for the sdrPlay devices can be obtained from "www.sdrplay.com".
+
+The script assumes an installation of Stretch on the RPI device, 
+it is assumed "git" is installed to fetch the source package.
+
+	sudo apt-get install git
+	git clone https://github.com/JvanKatwijk/dabradio
+	cd dabradio
+	chmod 777 script-rpi.sh
+	./script-rpi.sh
+
+Note that the installer for the rtlsdr handler will create an "udev" file
+(in "/etc/udev/rules.d"), that will be active only after a restart (or a restart of the udev subsystem).
+
+During installations of the various packages,  several times
+one has to acknowledge when asked for, so while it takes a few minutes
+it is wise to stay around.
+
+The executable will be installed in the subdirectory "linux-bin".
+
 
 ------------------------------------------------------------------
 Table of Contents
@@ -93,8 +124,9 @@ some gaps in the audio output.
 Windows
 ------------------------------------------------------------------
 
-Windows releases can be found at https://github.com/JvanKatwijk/dabradio/releases. The zipped folder found there contains
-the executable for this and some other windows prohgrams, as well as the libraries required. 
+For Windows, an *installer*  is available in the releases
+section. The installer will aldo install - if not installed
+already - the library for SDRplay support.
 
 If you want to compile it by yourself, please install Qt
 through its online installer, see https://www.qt.io/ 
